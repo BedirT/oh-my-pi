@@ -3060,6 +3060,8 @@ async function executeToolCalls(
 						steeringSignal: steeringSoftController.signal,
 						providerMetadata: toolCall.providerMetadata,
 					});
+					// The cooperative steering signal rides the loop-owned
+					// ToolCallContext (surfacing as `ctx.toolCall.steeringSignal`).
 					// Wrapper-dispatched nested calls (for example `write xd://…`) do
 					// not pass through `beforeToolCall` themselves. They inherit this
 					// context and report passive hook context through the callback, so
@@ -3077,10 +3079,8 @@ async function executeToolCalls(
 									},
 								}) as AgentToolContext);
 					const streamSession = speculationCoordinator?.takeStreamSession(toolCall.id);
-					if (streamSession && toolContext) {
+					if (streamSession) {
 						toolContext[SPECULATIVE_STREAM_SESSION] = streamSession;
-					} else if (streamSession && !streamSession.contextIndependent) {
-						await streamSession.discard("outer tool context cannot carry stream speculation");
 					}
 					executionStarted = true;
 					let rawResult: unknown;
