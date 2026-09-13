@@ -63,7 +63,12 @@ describe("Bedrock prompt-cache compat", () => {
 				minimumTokens: 1024,
 				supportsLongRetention: false,
 			},
-			{ id: "anthropic.claude-fable-5", minimumTokens: 1024, supportsLongRetention: true },
+			{
+				id: "anthropic.claude-fable-5",
+				minimumTokens: 1024,
+				supportsLongRetention: true,
+				supportsMidConversationSystem: true,
+			},
 			{
 				id: "anthropic.claude-haiku-4-5-20251001-v1:0",
 				minimumTokens: 4096,
@@ -86,7 +91,12 @@ describe("Bedrock prompt-cache compat", () => {
 			},
 			{ id: "anthropic.claude-opus-4-6-v1", minimumTokens: 4096, supportsLongRetention: false },
 			{ id: "global.anthropic.claude-opus-4-7", minimumTokens: 4096, supportsLongRetention: true },
-			{ id: "us.anthropic.claude-opus-4-8", minimumTokens: 4096, supportsLongRetention: true },
+			{
+				id: "us.anthropic.claude-opus-4-8",
+				minimumTokens: 4096,
+				supportsLongRetention: true,
+				supportsMidConversationSystem: true,
+			},
 			{
 				id: "anthropic.claude-sonnet-4-20250514-v1:0",
 				minimumTokens: 1024,
@@ -98,15 +108,19 @@ describe("Bedrock prompt-cache compat", () => {
 				supportsLongRetention: true,
 			},
 			{ id: "anthropic.claude-sonnet-4-6", minimumTokens: 1024, supportsLongRetention: false },
-			{ id: "us.anthropic.claude-sonnet-5", minimumTokens: 4096, supportsLongRetention: true },
+			{
+				id: "us.anthropic.claude-sonnet-5",
+				minimumTokens: 4096,
+				supportsLongRetention: true,
+				supportsMidConversationSystem: true,
+			},
 		] as const;
 
-		for (const { id, minimumTokens, supportsLongRetention } of cases) {
+		for (const { id, minimumTokens, supportsLongRetention, supportsMidConversationSystem = false } of cases) {
 			expect(buildModel(bedrockSpec({ id })).compat).toEqual({
 				promptCacheMode: minimumTokens === 0 ? "none" : "explicit",
 				supportsLongPromptCacheRetention: supportsLongRetention,
-				// Opus 4.8+ and Fable/Mythos/Sonnet 5+ accept mid-conversation system roles.
-				supportsMidConversationSystem: id.includes("opus-4-8") || id.includes("fable-5") || id.includes("sonnet-5"),
+				supportsMidConversationSystem,
 				promptCacheMinimumTokens: minimumTokens,
 				promptCacheMaximumCheckpoints: minimumTokens === 0 ? 0 : 4,
 				// bedrockSpec is reasoning:true → keepalive-free idle floor applies

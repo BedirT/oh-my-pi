@@ -2782,6 +2782,7 @@ function splitExecHandlerResult<R>(result: CursorExecHandlerResult<R>): {
 function isToolResultMessage(value: unknown): value is ToolResultMessage {
 	return !!value && typeof value === "object" && (value as ToolResultMessage).role === "toolResult";
 }
+
 async function applyToolResultHandler(
 	toolResult: ToolResultMessage | undefined,
 	onToolResult: CursorToolResultHandler | undefined,

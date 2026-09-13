@@ -238,7 +238,7 @@ function createToolContext(options: CursorExecBridgeOptions): {
 } {
 	const additionalContext: string[] = [];
 	const addAdditionalContext = (context: string): void => {
-		if (context.trim().length > 0) additionalContext.push(context);
+		if (typeof context === "string" && context.trim().length > 0) additionalContext.push(context);
 	};
 	const baseToolContext = options.getToolContext?.();
 	const context =

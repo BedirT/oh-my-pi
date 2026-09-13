@@ -2060,10 +2060,10 @@ export function convertMessages(
 			});
 		}
 
-		const developerAsUser = !compat.supportsDeveloperRole;
+		const devAsUser = !compat.supportsDeveloperRole;
 		const inputRole =
 			msg.role === "developer" &&
-			!developerAsUser &&
+			!devAsUser &&
 			(typeof msg.content === "string" || msg.content.every(item => item.type === "text"))
 				? "developer"
 				: "user";

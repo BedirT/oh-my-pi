@@ -1650,8 +1650,7 @@ export class Agent {
 				.filter(entry => entry.pending !== undefined)
 				.map(entry => entry.pending);
 			if (pendingTransforms.length > 0) await Promise.all(pendingTransforms);
-			const bufferedCursorEntries = this.#cursorToolResultBuffer;
-			const bufferedCursorResults = bufferedCursorEntries.map(({ toolResult }) => toolResult);
+			const bufferedCursorResults = this.#cursorToolResultBuffer.map(({ toolResult }) => toolResult);
 			const retainedToolCallIds = new Set(completedToolCallIds);
 			for (const { toolCallId } of bufferedCursorResults) retainedToolCallIds.add(toolCallId);
 			const errorMsg: AssistantMessage =
@@ -1728,7 +1727,7 @@ export class Agent {
 					this.#emit({ type: "message_end", message: toolResult });
 					toolResults.push(toolResult);
 				}
-				const contextMessage = this.#buildCursorAdditionalContextMessage(bufferedCursorEntries, errorMsg);
+				const contextMessage = this.#buildCursorAdditionalContextMessage(this.#cursorToolResultBuffer, errorMsg);
 				if (contextMessage) {
 					this.#emit({ type: "message_start", message: contextMessage });
 					this.appendMessage(contextMessage);
