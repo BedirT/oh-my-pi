@@ -8,7 +8,7 @@
 
 ### Fixed
 
-- Fixed held tool completions (result arriving before its card) dropping background-task parking and waiting-poll displacement, so background tasks show their final outcome and repeated `hub` waits keep replacing the previous frame ([#11868](https://github.com/can1357/oh-my-pi/pull/11868)).
+- Fixed held tool completions (result arriving before its card) dropping background-task parking and waiting-poll displacement, so background tasks show their final outcome and repeated `hub` waits keep replacing the previous frame ([#11969](https://github.com/can1357/oh-my-pi/pull/11969) by [@H4vC](https://github.com/H4vC)).
 
 ## [18.1.19] - 2026-09-12
 
