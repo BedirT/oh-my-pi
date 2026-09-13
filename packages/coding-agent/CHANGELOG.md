@@ -37,7 +37,7 @@
 
 - Added `collab.autoStart` (`off` | `view` | `control`): every local interactive session hosts itself as it starts and rotates its room on `/new`, `/resume`, fork, or branch, so a phone or dashboard can reach any running session without running `/collab` first ([#11908](https://github.com/can1357/oh-my-pi/pull/11908) by [@alphastorm](https://github.com/alphastorm) and [@sorphwer](https://github.com/sorphwer)).
 - Added `omp collab list [--json]` and `/collab list` to enumerate every live local Collab host (instance, generation, session, cwd, model, participants, relay/attention state, access) without exposing links, plus `omp collab link <instanceId|pid> [--view]` to fetch one generation-bound browser URL from a private per-room Unix socket/named pipe registry; room keys, write tokens, and URLs never touch disk ([#6099](https://github.com/can1357/oh-my-pi/issues/6099); [#11908](https://github.com/can1357/oh-my-pi/pull/11908) by [@alphastorm](https://github.com/alphastorm) and [@sorphwer](https://github.com/sorphwer)).
-- Added trusted `additionalContext` instructions to `tool_call` extension and hook results, with ordered delivery after tool results across built-in, extension, nested `xd://`, and Cursor-native execution paths ([#8363](https://github.com/can1357/oh-my-pi/pull/8363)).
+- Added trusted `additionalContext` instructions to `tool_call` extension and hook results, with ordered delivery after tool results across built-in, extension, nested `xd://`, and Cursor-native execution paths ([#8363](https://github.com/can1357/oh-my-pi/pull/8363) by [@kyle-elliott](https://github.com/kyle-elliott)).
 
 ### Fixed
 
