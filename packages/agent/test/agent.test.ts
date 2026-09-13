@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { type } from "@oh-my-pi/omptype";
 import { Agent, AgentBusyError, type AgentEvent, type AgentTool, ThinkingLevel } from "@oh-my-pi/pi-agent-core";
-import type { SimpleStreamOptions, ToolResultMessage } from "@oh-my-pi/pi-ai";
+import {
+	type Context,
+	type SimpleStreamOptions,
+	setToolResultAdditionalContext,
+	type ToolResultMessage,
+} from "@oh-my-pi/pi-ai";
 import { createMockModel } from "@oh-my-pi/pi-ai/providers/mock";
 import { kCursorExecResolved } from "@oh-my-pi/pi-ai/utils/block-symbols";
 import { AssistantMessageEventStream } from "@oh-my-pi/pi-ai/utils/event-stream";
@@ -934,6 +939,160 @@ describe("Agent", () => {
 		const toolResults = agent.state.messages.filter(message => message.role === "toolResult");
 		expect(toolResults).toHaveLength(1);
 		expect(toolResults[0]).toMatchObject({ toolCallId: toolCall.id, toolName: toolCall.name });
+	});
+
+	it("emits Cursor side-transport context after results in assistant call order", async () => {
+		const mock = createMockModel({ responses: [] });
+		const firstCall = {
+			type: "toolCall" as const,
+			id: "cursor-context-first",
+			name: "read",
+			arguments: { path: "first" },
+			[kCursorExecResolved]: true,
+		};
+		const secondCall = {
+			type: "toolCall" as const,
+			id: "cursor-context-second",
+			name: "read",
+			arguments: { path: "second" },
+			[kCursorExecResolved]: true,
+		};
+		const started = createAssistantMessage([firstCall, secondCall]);
+		const firstResult: ToolResultMessage = {
+			role: "toolResult",
+			toolCallId: firstCall.id,
+			toolName: firstCall.name,
+			content: [{ type: "text", text: "first result" }],
+			isError: false,
+			timestamp: Date.now(),
+		};
+		const secondResult: ToolResultMessage = {
+			role: "toolResult",
+			toolCallId: secondCall.id,
+			toolName: secondCall.name,
+			content: [{ type: "text", text: "second result" }],
+			isError: false,
+			timestamp: Date.now(),
+		};
+		setToolResultAdditionalContext(firstResult, ["first context"]);
+		setToolResultAdditionalContext(secondResult, ["second context"]);
+		const agent = new Agent({
+			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [], messages: [] },
+			streamFn: (_model, _context, options) => {
+				const stream = new AssistantMessageEventStream();
+				queueMicrotask(async () => {
+					// Results may settle out of order; context follows the assistant blocks.
+					await options?.cursorOnToolResult?.(secondResult);
+					await options?.cursorOnToolResult?.(firstResult);
+					stream.push({ type: "start", partial: started });
+					stream.push({ type: "done", reason: "stop", message: started });
+				});
+				return stream;
+			},
+		});
+
+		await agent.prompt("trigger");
+
+		const messages = agent.state.messages;
+		const developer = messages.find(message => message.role === "developer");
+		expect(developer?.content).toEqual([{ type: "text", text: "first context\n\nsecond context" }]);
+		expect(messages.at(-1)).toBe(developer);
+		expect(messages.slice(-3, -1).every(message => message.role === "toolResult")).toBe(true);
+	});
+
+	it("uses passive context returned by a Cursor result transformer", async () => {
+		const mock = createMockModel({ responses: [] });
+		const toolCall = {
+			type: "toolCall" as const,
+			id: "cursor-transformed-context",
+			name: "read",
+			arguments: { path: "context" },
+			[kCursorExecResolved]: true,
+		};
+		const started = createAssistantMessage([toolCall]);
+		const original: ToolResultMessage = {
+			role: "toolResult",
+			toolCallId: toolCall.id,
+			toolName: toolCall.name,
+			content: [{ type: "text", text: "original result" }],
+			isError: false,
+			timestamp: Date.now(),
+		};
+		const agent = new Agent({
+			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [], messages: [] },
+			cursorOnToolResult: message => {
+				const transformed = { ...message };
+				setToolResultAdditionalContext(transformed, ["transformed context"]);
+				return transformed;
+			},
+			streamFn: (_model, _context, options) => {
+				const stream = new AssistantMessageEventStream();
+				queueMicrotask(async () => {
+					await options?.cursorOnToolResult?.(original);
+					stream.push({ type: "start", partial: started });
+					stream.push({ type: "done", reason: "stop", message: started });
+				});
+				return stream;
+			},
+		});
+
+		await agent.prompt("trigger");
+
+		const developer = agent.state.messages.find(message => message.role === "developer");
+		expect(developer?.content).toEqual([{ type: "text", text: "transformed context" }]);
+	});
+
+	it("sends passive tool context with the default LLM conversion", async () => {
+		const toolSchema = type({ value: type("string") });
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			async execute(_toolCallId, params, _signal, _onUpdate, toolContext) {
+				toolContext?.addAdditionalContext?.(`tool context for ${params.value}`);
+				return {
+					content: [{ type: "text", text: `echoed: ${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+		let secondRequest: Context | undefined;
+		const mock = createMockModel({
+			responses: [
+				{
+					content: [{ type: "toolCall", id: "tool-default-context", name: "echo", arguments: { value: "hi" } }],
+				},
+				request => {
+					secondRequest = request;
+					return { content: ["done"] };
+				},
+			],
+		});
+		const agent = new Agent({
+			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [tool], messages: [] },
+			streamFn: mock.stream,
+		});
+		agent.beforeToolCall = async ({ args }) => ({
+			additionalContext: `prepared context for ${args.value}`,
+		});
+
+		await agent.prompt("run echo");
+
+		expect(secondRequest?.messages.map(message => message.role)).toEqual([
+			"user",
+			"assistant",
+			"toolResult",
+			"developer",
+		]);
+		const developer = secondRequest?.messages.at(-1);
+		expect(developer?.role).toBe("developer");
+		expect(developer?.content).toEqual([
+			{
+				type: "text",
+				text: "prepared context for hi\n\ntool context for hi",
+			},
+		]);
 	});
 
 	it("keeps the reserved result when the transformer rejects", async () => {

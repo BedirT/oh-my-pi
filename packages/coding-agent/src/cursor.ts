@@ -17,6 +17,7 @@ import type {
 	CursorExecHandlers as ICursorExecHandlers,
 	ToolResultMessage,
 } from "@oh-my-pi/pi-ai";
+import { setToolResultAdditionalContext } from "@oh-my-pi/pi-ai";
 import {
 	omitUndefinedArgs,
 	piEscapeRegexLiteral,
@@ -209,8 +210,9 @@ function createToolResultMessage(
 	toolName: string,
 	result: AgentToolResult<unknown>,
 	isError: boolean,
+	additionalContext: readonly string[] = [],
 ): ToolResultMessage {
-	return {
+	const message: ToolResultMessage = {
 		role: "toolResult",
 		toolCallId,
 		toolName,
@@ -219,6 +221,8 @@ function createToolResultMessage(
 		isError,
 		timestamp: Date.now(),
 	};
+	setToolResultAdditionalContext(message, additionalContext);
+	return message;
 }
 
 function buildToolErrorResult(message: string): AgentToolResult<unknown> {
@@ -226,6 +230,30 @@ function buildToolErrorResult(message: string): AgentToolResult<unknown> {
 		content: [{ type: "text", text: message }],
 		details: {},
 	};
+}
+
+function createToolContext(options: CursorExecBridgeOptions): {
+	context: AgentToolContext;
+	additionalContext: string[];
+} {
+	const additionalContext: string[] = [];
+	const addAdditionalContext = (context: string): void => {
+		if (context.trim().length > 0) additionalContext.push(context);
+	};
+	const baseToolContext = options.getToolContext?.();
+	const context =
+		baseToolContext === undefined
+			? ({ addAdditionalContext } as AgentToolContext)
+			: (Object.create(Object.getPrototypeOf(baseToolContext), {
+					...Object.getOwnPropertyDescriptors(baseToolContext),
+					addAdditionalContext: {
+						configurable: true,
+						enumerable: true,
+						value: addAdditionalContext,
+						writable: true,
+					},
+				}) as AgentToolContext);
+	return { context, additionalContext };
 }
 
 async function executeTool(
@@ -249,6 +277,7 @@ async function executeTool(
 
 	let result: AgentToolResult<unknown>;
 	let isError = false;
+	const toolContext = createToolContext(options);
 
 	const onUpdate: AgentToolUpdateCallback<unknown> | undefined = options.emitEvent
 		? partialResult => {
@@ -272,7 +301,7 @@ async function executeTool(
 			toolArgs as Record<string, unknown>,
 			undefined,
 			onUpdate,
-			options.getToolContext?.(),
+			toolContext.context,
 		);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -287,7 +316,7 @@ async function executeTool(
 	};
 	options.emitEvent?.({ type: "tool_execution_end", toolCallId, toolName, result: sanitizedFinalResult, isError });
 
-	return createToolResultMessage(toolCallId, toolName, result, isError);
+	return createToolResultMessage(toolCallId, toolName, result, isError, toolContext.additionalContext);
 }
 
 function allowsDirectFileMutation(options: CursorExecBridgeOptions): boolean {
@@ -530,6 +559,7 @@ export class CursorExecHandlers implements ICursorExecHandlers {
 
 		let result: AgentToolResult<unknown>;
 		let isError = false;
+		const toolContext = createToolContext(this.options);
 
 		let rawText = "";
 		let sanitizedRawText = "";
@@ -571,7 +601,7 @@ export class CursorExecHandlers implements ICursorExecHandlers {
 		};
 
 		try {
-			result = await tool.execute(toolCallId, toolArgs, undefined, onUpdate, this.options.getToolContext?.());
+			result = await tool.execute(toolCallId, toolArgs, undefined, onUpdate, toolContext.context);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			result = buildToolErrorResult(message);
@@ -605,7 +635,7 @@ export class CursorExecHandlers implements ICursorExecHandlers {
 			result: sanitizedFinalResult,
 			isError,
 		});
-		return createToolResultMessage(toolCallId, toolName, result, isError);
+		return createToolResultMessage(toolCallId, toolName, result, isError, toolContext.additionalContext);
 	}
 
 	async diagnostics(args: Parameters<NonNullable<ICursorExecHandlers["diagnostics"]>>[0]) {

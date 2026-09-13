@@ -4582,7 +4582,13 @@ function convertMessages(model: Model<"openai-codex-responses">, context: Contex
 
 			const normalizedContent = normalizeInputMessageContent(model, msg.content);
 			if (normalizedContent.length === 0) continue;
-			messages.push({ role: msg.role, content: normalizedContent });
+			const role =
+				msg.role === "developer" &&
+				typeof msg.content !== "string" &&
+				msg.content.some(item => item.type === "image")
+					? "user"
+					: msg.role;
+			messages.push({ role, content: normalizedContent });
 			msgIndex += 1;
 			continue;
 		}

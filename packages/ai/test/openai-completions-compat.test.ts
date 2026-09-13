@@ -397,6 +397,70 @@ describe("openai-completions compatibility", () => {
 		]);
 	});
 
+	it("preserves text-array developer messages only on capable endpoints", () => {
+		const model: Model<"openai-completions"> = buildModel({
+			...gpt4oMiniSpec,
+			api: "openai-completions",
+			reasoning: true,
+		} as ModelSpec<"openai-completions">);
+		const context: Context = {
+			messages: [
+				{ role: "user", content: "hello", timestamp: Date.now() },
+				{
+					role: "developer",
+					content: [{ type: "text", text: "Prefer indexed retrieval." }],
+					attribution: "agent",
+					timestamp: Date.now(),
+				},
+			],
+		};
+
+		expect(convertMessages(model, context, model.compat)).toEqual([
+			{ role: "user", content: "hello" },
+			{ role: "developer", content: [{ type: "text", text: "Prefer indexed retrieval." }] },
+		]);
+		expect(convertMessages(model, context, { ...model.compat, supportsDeveloperRole: false })).toEqual([
+			{ role: "user", content: "hello" },
+			{ role: "user", content: [{ type: "text", text: "Prefer indexed retrieval." }] },
+		]);
+	});
+
+	it("keeps image-bearing developer messages on the user role", () => {
+		const model: Model<"openai-completions"> = buildModel({
+			...gpt4oMiniSpec,
+			api: "openai-completions",
+			reasoning: true,
+			input: ["text", "image"],
+		} as ModelSpec<"openai-completions">);
+
+		const messages = convertMessages(
+			model,
+			{
+				messages: [
+					{ role: "user", content: "hello", timestamp: Date.now() },
+					{
+						role: "developer",
+						content: [
+							{ type: "text", text: "Match this reference." },
+							{ type: "image", data: "aGVsbG8=", mimeType: "image/png" },
+						],
+						attribution: "agent",
+						timestamp: Date.now(),
+					},
+				],
+			},
+			model.compat,
+		);
+
+		expect(messages.at(-1)).toEqual({
+			role: "user",
+			content: [
+				{ type: "text", text: "Match this reference." },
+				{ type: "image_url", image_url: { url: "data:image/png;base64,aGVsbG8=" } },
+			],
+		});
+	});
+
 	it("defaults supportsDeveloperRole to off for non-OpenAI/Azure hosts", () => {
 		// Regression: Moonshot's Kimi chat template rejects the `developer` role
 		// with `400 Invalid request: tokenization failed` because `developer` is

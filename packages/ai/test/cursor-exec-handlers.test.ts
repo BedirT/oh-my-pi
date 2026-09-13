@@ -13,12 +13,18 @@ import {
 } from "@oh-my-pi/pi-ai/providers/cursor";
 import { streamCursor as lazyStreamCursor, setCursorProviderModule } from "@oh-my-pi/pi-ai/providers/register-builtins";
 import type { AssistantMessage, Context, CursorExecHandlers, Model, ToolResultMessage } from "@oh-my-pi/pi-ai/types";
+import {
+	getToolResultAdditionalContext,
+	kToolResultAdditionalContext,
+	setToolResultAdditionalContext,
+} from "@oh-my-pi/pi-ai/types";
 import { kCursorExecResolved } from "@oh-my-pi/pi-ai/utils/block-symbols";
 import { AssistantMessageEventStream } from "@oh-my-pi/pi-ai/utils/event-stream";
 import { buildModel } from "@oh-my-pi/pi-catalog/build";
 import type { McpResult, ReadResult } from "@oh-my-pi/pi-catalog/discovery/cursor-proto";
 import {
 	type AgentRunRequest,
+	AgentClientMessageSchema,
 	AgentServerMessageSchema,
 	CursorRuleSource,
 	ExecServerMessageSchema,
@@ -33,7 +39,7 @@ import {
 	ReadResultSchema,
 	ReadSuccessSchema,
 } from "@oh-my-pi/pi-catalog/discovery/cursor-proto";
-import { create, encodeJsonValue } from "@oh-my-pi/pi-catalog/discovery/protobuf";
+import { create, encodeJsonValue, fromBinary } from "@oh-my-pi/pi-catalog/discovery/protobuf";
 import { logger } from "@oh-my-pi/pi-utils";
 
 afterEach(() => {
@@ -200,6 +206,136 @@ describe("Cursor resolveExecHandler execHandlers binding", () => {
 
 		// Should get error result (handler threw accessing undefined.sentinel)
 		expect(execResult).toEqual({ tag: "error", message: expect.any(String) });
+	});
+
+	it("carries passive context separately from the persisted tool result", async () => {
+		const original: ToolResultMessage = {
+			role: "toolResult",
+			toolCallId: "exec-context",
+			toolName: "read",
+			content: [{ type: "text", text: "file contents" }],
+			isError: false,
+			timestamp: Date.now(),
+		};
+		setToolResultAdditionalContext(original, ["use this result; do not search again"]);
+
+		const { execResult, toolResult } = await resolveExecHandler<{ path: string }, ToolResultMessage["content"]>(
+			{ path: "/tmp/foo" },
+			async () => original,
+			async result => Object.freeze({ ...result }),
+			result => result.content,
+			() => [],
+			() => [],
+			{ toolCallId: original.toolCallId, toolName: original.toolName },
+		);
+
+		expect(execResult).toEqual([{ type: "text", text: "file contents" }]);
+		expect(getToolResultAdditionalContext(execResult)).toEqual(["use this result; do not search again"]);
+		expect(toolResult?.content).toEqual([{ type: "text", text: "file contents" }]);
+		expect(getToolResultAdditionalContext(toolResult)).toEqual(["use this result; do not search again"]);
+	});
+
+	it("keeps the passive-context carrier non-enumerable", () => {
+		const result = {};
+		const context = ["do not retry"];
+		setToolResultAdditionalContext(result, context);
+
+		expect(Object.getOwnPropertyDescriptor(result, kToolResultAdditionalContext)).toEqual({
+			value: context,
+			writable: false,
+			enumerable: false,
+			configurable: true,
+		});
+		expect(getToolResultAdditionalContext({ ...result })).toBeUndefined();
+	});
+
+	it("sends context from a combined handler result through Cursor's native side channel", async () => {
+		const output = cursorAssistantMessage();
+		const stream = new AssistantMessageEventStream();
+		const state = newBlockState();
+		const written: Buffer[] = [];
+		const h2Request = {
+			write: (chunk: unknown) => {
+				written.push(Buffer.from(chunk as Uint8Array));
+				return true;
+			},
+		} as unknown as Parameters<typeof handleServerMessage>[5];
+		const toolResult: ToolResultMessage = {
+			role: "toolResult",
+			toolCallId: "call-read-context",
+			toolName: "read",
+			content: [{ type: "text", text: "transcript result" }],
+			isError: false,
+			timestamp: 1,
+		};
+		setToolResultAdditionalContext(toolResult, ["use the provider result before another read"]);
+		const providerResult = create(ReadResultSchema, {
+			result: {
+				case: "success",
+				value: create(ReadSuccessSchema, {
+					path: "/tmp/context",
+					output: { case: "content", value: "provider result" },
+				}),
+			},
+		});
+		const execHandlers: CursorExecHandlers = {
+			async read() {
+				return { result: providerResult, toolResult };
+			},
+		};
+		const serverMsg = create(AgentServerMessageSchema, {
+			message: {
+				case: "execServerMessage",
+				value: create(ExecServerMessageSchema, {
+					id: 2,
+					execId: "exec-context",
+					acceptHookAdditionalContexts: true,
+					message: {
+						case: "readArgs",
+						value: create(ReadArgsSchema, { path: "/tmp/context", toolCallId: "call-read-context" }),
+					},
+				}),
+			},
+		});
+
+		await handleServerMessage(
+			serverMsg,
+			output,
+			stream,
+			state,
+			new Map(),
+			h2Request,
+			execHandlers,
+			undefined,
+			{ sawTokenDelta: false },
+			[],
+		);
+
+		expect(written).toHaveLength(1);
+		const length = written[0].readUInt32BE(1);
+		const clientMessage = fromBinary(AgentClientMessageSchema, written[0].subarray(5, 5 + length));
+		expect(clientMessage.message.case).toBe("execClientMessage");
+		if (clientMessage.message.case !== "execClientMessage") throw new Error("expected exec client message");
+		expect(
+			clientMessage.message.value.hookAdditionalContexts.map(({ hookEventName, content }) => ({
+				hookEventName,
+				content,
+			})),
+		).toEqual([
+			{
+				hookEventName: "tool_call",
+				content: "use the provider result before another read",
+			},
+		]);
+		expect(clientMessage.message.value.message).toMatchObject({
+			case: "readResult",
+			value: {
+				result: {
+					case: "success",
+					value: { output: { case: "content", value: "provider result" } },
+				},
+			},
+		});
 	});
 
 	// `synthesizeCursorExecToolCall` marks every exec block `kCursorExecResolved`

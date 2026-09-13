@@ -140,6 +140,7 @@ describe("Amazon Bedrock Claude Opus 5", () => {
 			expect(resolveModelPolicy(spec).compat).toEqual({
 				promptCacheMode: "explicit",
 				supportsLongPromptCacheRetention: true,
+				supportsMidConversationSystem: true,
 				promptCacheMinimumTokens: 512,
 				promptCacheMaximumCheckpoints: 4,
 				// reasoning:true adaptive-thinking family → 900s keepalive-free idle floor.

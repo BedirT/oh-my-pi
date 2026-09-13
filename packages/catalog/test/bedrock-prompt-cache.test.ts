@@ -105,6 +105,8 @@ describe("Bedrock prompt-cache compat", () => {
 			expect(buildModel(bedrockSpec({ id })).compat).toEqual({
 				promptCacheMode: minimumTokens === 0 ? "none" : "explicit",
 				supportsLongPromptCacheRetention: supportsLongRetention,
+				// Opus 4.8+ and Fable/Mythos/Sonnet 5+ accept mid-conversation system roles.
+				supportsMidConversationSystem: id.includes("opus-4-8") || id.includes("fable-5") || id.includes("sonnet-5"),
 				promptCacheMinimumTokens: minimumTokens,
 				promptCacheMaximumCheckpoints: minimumTokens === 0 ? 0 : 4,
 				// bedrockSpec is reasoning:true → keepalive-free idle floor applies
@@ -118,6 +120,7 @@ describe("Bedrock prompt-cache compat", () => {
 		const expected = {
 			promptCacheMode: "explicit",
 			supportsLongPromptCacheRetention: false,
+			supportsMidConversationSystem: false,
 			promptCacheMinimumTokens: 1024,
 			promptCacheMaximumCheckpoints: 4,
 		} as const;

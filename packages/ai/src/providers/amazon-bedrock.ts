@@ -245,7 +245,7 @@ type AssistantContent = TextBlockWire | ToolUseBlockWire | ReasoningBlockWire;
 type SystemContent = TextBlockWire | CachePoint;
 
 interface WireMessage {
-	role: "user" | "assistant";
+	role: "user" | "assistant" | "system";
 	content: Array<UserContent | AssistantContent>;
 }
 
@@ -958,6 +958,7 @@ function convertMessages(
 	promptCachePolicy: BedrockPromptCachePolicy,
 ): WireMessage[] {
 	const result: WireMessage[] = [];
+	const developerMessageIndices: number[] = [];
 	const transformedMessages = transformMessages(context.messages, model, normalizeToolCallId);
 
 	for (let i = 0; i < transformedMessages.length; i++) {
@@ -965,13 +966,13 @@ function convertMessages(
 
 		switch (m.role) {
 			case "developer":
-			case "user":
+			case "user": {
+				const contentBlocks: UserContent[] = [];
 				if (typeof m.content === "string") {
-					// Skip empty user messages
-					if (!m.content || m.content.trim() === "") continue;
-					result.push({ role: "user", content: [{ text: m.content.toWellFormed() }] });
+					const text = m.content.toWellFormed();
+					if (text.trim().length === 0) continue;
+					contentBlocks.push({ text });
 				} else {
-					const contentBlocks: UserContent[] = [];
 					for (const c of m.content) {
 						switch (c.type) {
 							case "text": {
@@ -987,11 +988,12 @@ function convertMessages(
 								throw new AIError.ValidationError("Unknown user content type");
 						}
 					}
-					// Skip message if all blocks filtered out
-					if (contentBlocks.length === 0) continue;
-					result.push({ role: "user", content: contentBlocks });
 				}
+				if (contentBlocks.length === 0) continue;
+				if (m.role === "developer") developerMessageIndices.push(result.length);
+				result.push({ role: "user", content: contentBlocks });
 				break;
+			}
 			case "assistant": {
 				// Skip assistant messages with empty content (e.g., from aborted requests)
 				// Bedrock rejects messages with empty content arrays
@@ -1071,11 +1073,25 @@ function convertMessages(
 		}
 	}
 
+	if (developerMessageIndices.length > 0 && model.compat.supportsMidConversationSystem) {
+		for (let developerIndex = developerMessageIndices.length - 1; developerIndex >= 0; developerIndex--) {
+			const idx = developerMessageIndices[developerIndex];
+			const followsUser = idx > 0 && result[idx - 1]?.role === "user";
+			const next = result[idx + 1];
+			const endsOrContinuesSystemSection =
+				idx === result.length - 1 || next?.role === "assistant" || next?.role === "system";
+			const textOnly = result[idx].content.every(block => "text" in block);
+			if (followsUser && endsOrContinuesSystemSection && textOnly) {
+				result[idx].role = "system";
+			}
+		}
+	}
+
 	// Prioritize the final user checkpoint; buildSystemPrompt consumes any
 	// remaining configured capacity afterward.
 	if (result.length > 0) {
 		const lastMessage = result[result.length - 1];
-		if (lastMessage.role === "user" && lastMessage.content) {
+		if ((lastMessage.role === "user" || lastMessage.role === "system") && lastMessage.content) {
 			const cachePoint = takeCachePoint(promptCachePolicy);
 			if (cachePoint) (lastMessage.content as UserContent[]).push(cachePoint);
 		}

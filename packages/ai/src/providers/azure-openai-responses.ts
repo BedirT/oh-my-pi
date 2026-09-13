@@ -376,6 +376,7 @@ function buildParams(
 		context,
 		strictResponsesPairing: true,
 		supportsImageDetailOriginal: model.compat.supportsImageDetailOriginal,
+		supportsDeveloperRole: model.compat.supportsDeveloperRole,
 		systemRole,
 		nativeHistory: { replay: true, filterReasoning: false },
 		includeThinkingSignatures: true,
