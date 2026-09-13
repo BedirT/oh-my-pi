@@ -29,6 +29,7 @@ import evalCodeModeDescription from "../prompts/tools/eval-code-mode.md" with { 
 import { DEFAULT_MAX_BYTES, OutputSink, type OutputSummary, TailBuffer } from "../session/streaming-output";
 import { sessionDelegationBias } from "../task/prompt-policy";
 import { resolveSpawnPolicy } from "../task/spawn-policy";
+import { canSpawnAtDepth } from "../task/types";
 import { webpExclusionForModel } from "../utils/image-loading";
 import { formatDimensionNote, resizeImage } from "../utils/image-resize";
 import type { ToolSession } from ".";
@@ -287,7 +288,15 @@ export class EvalTool implements AgentTool<typeof evalSchema> {
 			base = getEvalToolDescription();
 		} else {
 			const backends = resolveEvalBackends(this.session);
-			const sessionSpawns = this.session.getSessionSpawns?.() ?? "*";
+			// Effective spawn availability also depends on the recursion-depth gate
+			// that removes the `task` tool (see tools/index.ts). When the current
+			// depth cannot spawn, force an empty policy so the prompt drops the
+			// agent()/wait()/workpool()/DAG guidance the model could never use.
+			const depthAllowsSpawn = canSpawnAtDepth(
+				this.session.settings.get("task.maxRecursionDepth") ?? 2,
+				this.session.taskDepth ?? 0,
+			);
+			const sessionSpawns = depthAllowsSpawn ? (this.session.getSessionSpawns?.() ?? "*") : "";
 			const preludeDocumentation = getEnabledEvalPreludes(this.session.getEvalPreludes?.() ?? [])
 				.map(definition => definition.documentation.trim())
 				.filter(Boolean)

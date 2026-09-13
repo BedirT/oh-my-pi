@@ -10,14 +10,20 @@ function makeSession(opts: {
 	spawns?: string | null;
 	backends?: Record<string, boolean>;
 	preludes?: () => readonly EvalPreludeDefinition[];
+	maxRecursionDepth?: number;
+	taskDepth?: number;
 }): ToolSession {
 	const settings = Settings.isolated();
-	for (const [key, value] of Object.entries(opts.backends ?? {})) settings.set(key as never, value);
+	const backends = opts.backends ?? {};
+	for (const key in backends) settings.set(key as never, backends[key] as never);
+	if (opts.maxRecursionDepth !== undefined)
+		settings.set("task.maxRecursionDepth" as never, opts.maxRecursionDepth as never);
 	return {
 		cwd: "/tmp/eval-test",
 		hasUI: false,
 		getSessionFile: () => null,
 		getSessionSpawns: () => opts.spawns ?? "*",
+		taskDepth: opts.taskDepth ?? 0,
 		...(opts.preludes ? { getEvalPreludes: opts.preludes } : {}),
 		settings,
 	} as unknown as ToolSession;
@@ -67,6 +73,17 @@ describe("eval tool description", () => {
 		const denied = new EvalTool(makeSession({ spawns: "" })).description;
 		expect(wildcard).toContain("agent(prompt");
 		expect(denied).not.toContain("agent(prompt");
+	});
+
+	it("omits agent()/workpool() when task.maxRecursionDepth disables spawning at the current depth", () => {
+		// spawns policy is "*", but maxRecursionDepth:0 removes the `task` tool at
+		// depth 0, so the effective depth gate must strip the spawn guidance.
+		const capped = new EvalTool(makeSession({ spawns: "*", maxRecursionDepth: 0, taskDepth: 0 })).description;
+		expect(capped).not.toContain("agent(prompt");
+		expect(capped).not.toContain("workpool(");
+		// Same policy one level below the cap still advertises spawning.
+		const allowed = new EvalTool(makeSession({ spawns: "*", maxRecursionDepth: 1, taskDepth: 0 })).description;
+		expect(allowed).toContain("agent(prompt");
 	});
 
 	it("hides eval-defined tool guidance when eval.tools.enabled is off", () => {
