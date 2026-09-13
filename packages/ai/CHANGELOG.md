@@ -2,15 +2,11 @@
 
 ## [Unreleased]
 
-## [18.1.20] - 2026-09-13
-
-### Fixed
-
-- Fixed Windows OAuth sign-in failing on every attempt after an upgrade when a previous run left a stale native callback registration behind; handlers registered by older binaries are now recognized as owned and rolled back instead of blocking recovery ([#11967](https://github.com/can1357/oh-my-pi/pull/11967) by [@H4vC](https://github.com/H4vC)).
-
 ### Added
 
 - Added a non-serializing side channel for provider-native tool results to carry trusted extension-authored instructions into the next provider request without changing persisted result payloads ([#8363](https://github.com/can1357/oh-my-pi/pull/8363) by [@kyle-elliott](https://github.com/kyle-elliott)).
+
+## [18.1.20] - 2026-09-13
 
 ### Fixed
 
