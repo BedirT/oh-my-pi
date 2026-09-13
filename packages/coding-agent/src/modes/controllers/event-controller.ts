@@ -1738,26 +1738,39 @@ export class EventController {
 		event: Extract<AgentSessionEvent, { type: "tool_execution_end" }>,
 	): void {
 		if (event.toolName === "read") this.#inlineReadToolImages(event.toolCallId, event.result);
-		component.updateResult({ ...event.result, isError: event.isError }, false, event.toolCallId);
-		this.ctx.pendingTools.delete(event.toolCallId);
+		// Mirror `#handleToolExecutionEnd`: a still-running async task parks its
+		// card so later `tool_execution_update` frames find the component and the
+		// card shows its final outcome; anything else untracks like normal.
+		const asyncState = (event.result.details as { async?: { state?: string } } | undefined)?.async?.state;
+		const isBackgroundTask = event.toolName === "task" && asyncState === "running";
+		component.updateResult({ ...event.result, isError: event.isError }, isBackgroundTask, event.toolCallId);
+		if (isBackgroundTask) {
+			component.parkAsBackground();
+			this.#backgroundTaskCallIds.add(event.toolCallId);
+		} else {
+			this.ctx.pendingTools.delete(event.toolCallId);
+			this.#backgroundTaskCallIds.delete(event.toolCallId);
+		}
 		if (event.toolName === "read") this.#clearReadToolCall(event.toolCallId);
-		if (
-			component instanceof ToolExecutionComponent &&
-			component.isDisplaceableBlock() &&
-			event.toolName === "todo" &&
-			component.canBeDisplacedBy("todo")
-		) {
-			// Mirrors the displacement bookkeeping in `#handleToolExecutionEnd`:
-			// a successful snapshot supersedes the previous live panel.
-			const previous = this.#displaceableTodoComponent;
-			if (previous && previous !== component && previous.isDisplaceableBlock()) {
-				this.#displaceableTodoComponent = undefined;
-				if (this.ctx.chatContainer.canRemoveBlock(previous)) {
-					this.ctx.chatContainer.removeChild(previous);
+		if (component instanceof ToolExecutionComponent && component.isDisplaceableBlock()) {
+			if (event.toolName === "hub" && component.canBeDisplacedBy("hub")) {
+				// Mirror the waiting-poll bookkeeping in `#handleToolExecutionEnd`:
+				// the next `hub` call displaces this settled poll instead of
+				// stacking another "waiting" frame beside it.
+				this.#displaceablePollComponent = component;
+			} else if (event.toolName === "todo" && component.canBeDisplacedBy("todo")) {
+				// Mirrors the displacement bookkeeping in `#handleToolExecutionEnd`:
+				// a successful snapshot supersedes the previous live panel.
+				const previous = this.#displaceableTodoComponent;
+				if (previous && previous !== component && previous.isDisplaceableBlock()) {
+					this.#displaceableTodoComponent = undefined;
+					if (this.ctx.chatContainer.canRemoveBlock(previous)) {
+						this.ctx.chatContainer.removeChild(previous);
+					}
+					previous.seal();
 				}
-				previous.seal();
+				this.#displaceableTodoComponent = component;
 			}
-			this.#displaceableTodoComponent = component;
 		}
 		this.ctx.ui.requestRender();
 	}

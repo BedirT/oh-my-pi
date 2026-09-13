@@ -12,6 +12,9 @@
  *    real result never rendered — the "disappearing task call").
  * 2. A final async frame arriving AFTER an end that parked the block as
  *    background ("running") finalizes and untracks it.
+ * 3. A `running` end that wins the race against its card (held completion)
+ *    parks the block just like the normal path, so later job frames still
+ *    finalize it.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test";
 import { resetSettingsForTest, Settings } from "@oh-my-pi/pi-coding-agent/config/settings";
@@ -127,6 +130,43 @@ describe("EventController async update finalization", () => {
 		});
 		expect(pendingTools.has("tc-task")).toBe(false);
 		expect(component.isTranscriptBlockFinalized()).toBe(true);
+	});
+
+	it("parks a held running task so later job frames finalize it", async () => {
+		const { controller, pendingTools } = createFixture();
+
+		// The `running` completion wins the race against the streamed card and
+		// is held until the start below creates it.
+		await controller.handleEvent({
+			type: "tool_execution_end",
+			toolCallId: "tc-task",
+			toolName: "task",
+			result: taskResult("running", "Spawned agent `Job1` (job `Job1`)."),
+			isError: false,
+		});
+		expect(pendingTools.has("tc-task")).toBe(false);
+
+		await controller.handleEvent({
+			type: "tool_execution_start",
+			toolCallId: "tc-task",
+			toolName: "task",
+			args: { context: "ctx", tasks: [{ agent: "task", task: "work" }] },
+		});
+		const settled = pendingTools.get("tc-task")!;
+		sealed.push(settled);
+		// Parked like a normally-completed running task: kept tracked so later
+		// job frames land in the card instead of finding nothing.
+		expect(settled.isTranscriptBlockFinalized()).toBe(true);
+
+		await controller.handleEvent({
+			type: "tool_execution_update",
+			toolCallId: "tc-task",
+			toolName: "task",
+			args: {},
+			partialResult: taskResult("completed", "Background task Job1 complete."),
+		});
+		expect(pendingTools.has("tc-task")).toBe(false);
+		expect(settled.isTranscriptBlockFinalized()).toBe(true);
 	});
 
 	it("finalizes a backgrounded Bash block without tracking later job updates", async () => {

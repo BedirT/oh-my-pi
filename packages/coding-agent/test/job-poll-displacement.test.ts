@@ -224,6 +224,38 @@ describe("EventController displaces consecutive waiting polls", () => {
 		expect(first.isTranscriptBlockFinalized()).toBe(true);
 	});
 
+	it("displaces a held waiting poll once its late card settles", async () => {
+		const { controller, children, pendingTools } = createFixture();
+
+		// The completion wins the race against the streamed card: held until
+		// the `tool_execution_start` below creates it.
+		await controller.handleEvent({
+			type: "tool_execution_end",
+			toolCallId: "t1",
+			toolName: "hub",
+			result: pollResult(["running", "running"]),
+			isError: false,
+		});
+		expect(pendingTools.has("t1")).toBe(false);
+
+		await controller.handleEvent({
+			type: "tool_execution_start",
+			toolCallId: "t1",
+			toolName: "hub",
+			args: { op: "wait", ids: ["j0"] },
+		});
+		const first = trackComponent(created, children[children.length - 1] as ToolExecutionComponent);
+		expect(first.isDisplaceableBlock()).toBe(true);
+
+		const second = await runPoll(controller, children, "t2");
+
+		// The settled poll displaces like a normally-completed one instead of
+		// accumulating beside the fresh wait.
+		expect(children).not.toContain(first);
+		expect(children).toContain(second);
+		expect(first.isTranscriptBlockFinalized()).toBe(true);
+	});
+
 	it("seals the waiting poll in place when a different tool runs next", async () => {
 		const { controller, children } = createFixture();
 
