@@ -40,7 +40,12 @@ function expectsAdaptiveDisplay(id: string): boolean {
 
 describe("Bedrock prompt-cache compat", () => {
 	test("resolves the AWS-documented capability for every cache-priced bundled Claude family", () => {
-		const cases = [
+		const cases: Array<{
+			id: string;
+			minimumTokens: number;
+			supportsLongRetention: boolean;
+			supportsMidConversationSystem?: boolean;
+		}> = [
 			{
 				id: "anthropic.claude-3-5-haiku-20241022-v1:0",
 				minimumTokens: 2048,
@@ -114,7 +119,7 @@ describe("Bedrock prompt-cache compat", () => {
 				supportsLongRetention: true,
 				supportsMidConversationSystem: true,
 			},
-		] as const;
+		];
 
 		for (const { id, minimumTokens, supportsLongRetention, supportsMidConversationSystem = false } of cases) {
 			expect(buildModel(bedrockSpec({ id })).compat).toEqual({
