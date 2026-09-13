@@ -175,7 +175,9 @@ function resolveTierCandidates(tier: CompletionTier, session: ToolSession): Comp
 
 	const disabledProviders = new Set(session.settings.get("disabledProviders"));
 	const seen = new Set([candidateIdentity(primary.model, candidates[0])]);
-	for (const selector of findRetryFallbackCandidates(context, chainKey, primary.selector, primary.model)) {
+	for (const selector of findRetryFallbackCandidates(context, chainKey, primary.selector, primary.model, {
+		allowMissingPrimary: true,
+	})) {
 		const resolved = resolveModelOverride([selector.raw], modelRegistry, session.settings);
 		const model = resolved.model;
 		if (!model || disabledProviders.has(model.provider)) continue;

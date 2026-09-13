@@ -254,6 +254,22 @@ describe("runEvalCompletion", () => {
 		});
 	});
 
+	it("uses the tier fallback chain when its role has an unqualified model selector", async () => {
+		const fallback = makeModel("p", "fallback");
+		const session = makeSession({ available: [SMOL, fallback], roles: { smol: "smol" } });
+		session.settings.set("retry.fallbackChains", { smol: ["p/fallback"] });
+		vi.spyOn(ai, "completeSimple")
+			.mockResolvedValueOnce(assistant({ stopReason: "error", errorMessage: "quota exhausted" }))
+			.mockResolvedValueOnce(assistant({ text: "unqualified fallback answer" }));
+
+		const result = await runEvalCompletionAndWait({ prompt: "q", model: "smol" }, { session });
+
+		expect(result).toEqual({
+			text: "unqualified fallback answer",
+			details: { model: "p/fallback", tier: "smol", structured: false },
+		});
+	});
+
 	it("uses session-sticky credentials when preflighting a fallback model", async () => {
 		const fallback = makeModel("oauth", "fallback");
 		const sessionId = "sticky-session";
