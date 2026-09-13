@@ -223,14 +223,15 @@ async function executeCompletion(
 				},
 			]
 		: undefined;
-	const telemetry = resolveTelemetry(session.getTelemetry?.(), session.getSessionId?.() ?? undefined);
+	const sessionId = session.getSessionId?.() ?? undefined;
+	const telemetry = resolveTelemetry(session.getTelemetry?.(), sessionId);
 	const systemPrompt = system ? [system] : ["You are a helpful assistant."];
 	let response: AssistantMessage | undefined;
 	let model: Model<Api> | undefined;
 	for (const [index, candidate] of candidates.entries()) {
 		model = candidate.model;
 		try {
-			const apiKey = await registry.getApiKey(model);
+			const apiKey = await registry.getApiKey(model, sessionId, { signal });
 			if (!apiKey) {
 				throw new ToolError(
 					`completion() has no API key for ${formatModelString(model)}. Configure credentials for this provider or choose another tier.`,
@@ -244,7 +245,7 @@ async function executeCompletion(
 					tools,
 				},
 				{
-					apiKey: registry.resolver(model, session.getSessionId?.() ?? undefined),
+					apiKey: registry.resolver(model, sessionId),
 					signal,
 					reasoning: candidate.reasoning,
 					disableReasoning: candidate.disableReasoning,

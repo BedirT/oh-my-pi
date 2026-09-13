@@ -70,6 +70,7 @@ interface SessionOptions {
 	apiKey?: string | null;
 	activeModel?: string;
 	roles?: Partial<Record<"smol" | "default" | "slow", string>>;
+	sessionId?: string;
 }
 
 function makeSession(opts: SessionOptions = {}): ToolSession {
@@ -88,6 +89,7 @@ function makeSession(opts: SessionOptions = {}): ToolSession {
 		settings,
 		modelRegistry,
 		getActiveModelString: () => opts.activeModel ?? "p/default",
+		getSessionId: () => opts.sessionId ?? null,
 	} as unknown as ToolSession;
 }
 
@@ -249,6 +251,32 @@ describe("runEvalCompletion", () => {
 		expect(result).toEqual({
 			text: "fallback answer",
 			details: { model: "p/fallback", tier: "smol", structured: false },
+		});
+	});
+
+	it("uses session-sticky credentials when preflighting a fallback model", async () => {
+		const fallback = makeModel("oauth", "fallback");
+		const sessionId = "sticky-session";
+		const session = makeSession({ available: [SMOL, fallback], sessionId });
+		session.settings.set("retry.fallbackChains", { smol: ["oauth/fallback"] });
+		vi.spyOn(session.modelRegistry!, "getApiKey").mockImplementation(async (model, receivedSessionId, options) => {
+			if (model.id === "smol") return "primary-key";
+			return receivedSessionId === sessionId && options?.signal && !options.signal.aborted
+				? "session-key"
+				: undefined;
+		});
+		vi.spyOn(ai, "completeSimple")
+			.mockResolvedValueOnce(assistant({ stopReason: "error", errorMessage: "quota exhausted" }))
+			.mockResolvedValueOnce(assistant({ text: "session fallback answer" }));
+
+		const result = await runEvalCompletionAndWait(
+			{ prompt: "q", model: "smol" },
+			{ session, signal: new AbortController().signal },
+		);
+
+		expect(result).toEqual({
+			text: "session fallback answer",
+			details: { model: "oauth/fallback", tier: "smol", structured: false },
 		});
 	});
 
