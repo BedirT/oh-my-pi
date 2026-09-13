@@ -135,6 +135,7 @@
 		"providers/huggingface.kdl",
 		"providers/kilo.kdl",
 		"providers/kimi-code.kdl",
+		"providers/litellm.kdl",
 		"providers/llama.cpp.kdl",
 		"providers/lm-studio.kdl",
 		"providers/meta.kdl",
@@ -11215,6 +11216,16 @@
 				},
 				"thinking": {
 					"mode": "effort"
+				}
+			},
+			{
+				"source": "providers/litellm.kdl:7",
+				"class": "deepseek",
+				"providers": [
+					"litellm"
+				],
+				"wire": {
+					"stripImageInput": false
 				}
 			},
 			{

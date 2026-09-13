@@ -1,0 +1,10 @@
+// Provider-wire compat for "litellm".
+
+provider "litellm" {
+	// LiteLLM's operator-authored supports_vision metadata is the deployment
+	// contract. Clear the lineage safety default; declared input modalities still
+	// gate image transmission for text-only groups.
+	class "deepseek" {
+		strip-image-input #false
+	}
+}

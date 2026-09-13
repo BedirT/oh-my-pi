@@ -5,6 +5,7 @@
 ### Fixed
 
 - Fixed OpenCode Zen/Go Muse Spark models failing every tool-call turn with a 400 "reasoning encrypted_content was not issued to this caller" error: the gateways proxy the Responses lane to Meta but can't round-trip encrypted reasoning, so those SKUs no longer request or replay it ([#11928](https://github.com/can1357/oh-my-pi/issues/11928)).
+- LiteLLM DeepSeek groups now honor operator-declared vision support instead of stripping image attachments ([#11979](https://github.com/can1357/oh-my-pi/issues/11979)).
 
 ## [18.1.19] - 2026-09-12
 

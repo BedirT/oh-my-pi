@@ -18,6 +18,8 @@ const RUNTIME_ONLY_PROVIDERS = new Set([
 	"llama.cpp",
 	"lm-studio",
 	"vllm",
+	// Local proxy discovery via litellmModelManagerOptions.
+	"litellm",
 	"openai-codex-device",
 	// Public gateway discovery via charmHyperModelManagerOptions: every row,
 	// including its tariff and effort ladder, comes from the live /v1/models

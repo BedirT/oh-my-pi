@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "bun:test";
+import { sendsImageInputOnWire } from "@oh-my-pi/pi-ai/providers/vision-guard";
 import { buildModel } from "@oh-my-pi/pi-catalog/build";
 import {
 	fetchLiteLLMRichModels,
@@ -372,8 +373,8 @@ describe("LiteLLM provider discovery", () => {
 				return Response.json({
 					data: [
 						{
-							model_group: "gpt-big",
-							model_name: "Gateway GPT Big",
+							model_group: "deepseek-v4.1-flash",
+							model_name: "DeepSeek V4.1 Flash",
 							max_input_tokens: 262_144,
 							max_output_tokens: 16_384,
 							supports_vision: true,
@@ -398,8 +399,8 @@ describe("LiteLLM provider discovery", () => {
 
 		expect(models).toHaveLength(1);
 		expect(models?.[0]).toMatchObject({
-			id: "gpt-big",
-			name: "Gateway GPT Big",
+			id: "deepseek-v4.1-flash",
+			name: "DeepSeek V4.1 Flash",
 			provider: "litellm",
 			baseUrl: "http://primary:4000/v1",
 			contextWindow: 262_144,
@@ -413,6 +414,11 @@ describe("LiteLLM provider discovery", () => {
 			},
 			supportsTools: true,
 		});
+		const model = models?.[0];
+		if (!model) {
+			throw new Error("LiteLLM discovery returned no models");
+		}
+		expect(sendsImageInputOnWire(buildModel(model))).toBe(true);
 	});
 
 	test("warns once when forbidden rich metadata forces /v1/models fallback", async () => {
