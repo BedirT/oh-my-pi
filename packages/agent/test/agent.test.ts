@@ -839,6 +839,49 @@ describe("Agent", () => {
 		});
 	});
 
+	it("emits buffered Cursor context when the stream fails after buffering", async () => {
+		const mock = createMockModel({ responses: [] });
+		const errorText = "connection reset after Cursor exec";
+		const toolCall = {
+			type: "toolCall" as const,
+			id: "cursor-tool-ctx",
+			name: "shell",
+			arguments: { command: "pwd" },
+			[kCursorExecResolved]: true,
+		};
+		const started = createAssistantMessage([toolCall]);
+		const realToolResult: ToolResultMessage = {
+			role: "toolResult",
+			toolCallId: toolCall.id,
+			toolName: toolCall.name,
+			content: [{ type: "text", text: "/workspace" }],
+			isError: false,
+			timestamp: Date.now(),
+		};
+		setToolResultAdditionalContext(realToolResult, ["use this output before retrying"]);
+		const agent = new Agent({
+			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [], messages: [] },
+			cursorOnToolResult: message => message,
+			streamFn: (_model, _context, options) => {
+				const stream = new AssistantMessageEventStream();
+				queueMicrotask(async () => {
+					await options?.cursorOnToolResult?.(realToolResult);
+					stream.push({ type: "start", partial: started });
+					stream.fail(new Error(errorText));
+				});
+				return stream;
+			},
+		});
+
+		await agent.prompt("trigger");
+
+		const developers = agent.state.messages.filter(message => message.role === "developer");
+		expect(developers).toHaveLength(1);
+		expect(developers[0]).toMatchObject({
+			content: [{ type: "text", text: "use this output before retrying" }],
+		});
+	});
+
 	it("persists the transformed payload when the stream fails mid-transform", async () => {
 		// The error drain snapshots the Cursor buffer just like the normal one, so
 		// it needs the same await: a transformer still in flight when the provider

@@ -1650,7 +1650,11 @@ export class Agent {
 				.filter(entry => entry.pending !== undefined)
 				.map(entry => entry.pending);
 			if (pendingTransforms.length > 0) await Promise.all(pendingTransforms);
-			const bufferedCursorResults = this.#cursorToolResultBuffer.map(({ toolResult }) => toolResult);
+			// Snapshot the entries alongside their results: the buffer is cleared
+			// below before the context message is built, and the entries carry
+			// the passive context the results alone do not.
+			const bufferedCursorEntries = this.#cursorToolResultBuffer;
+			const bufferedCursorResults = bufferedCursorEntries.map(({ toolResult }) => toolResult);
 			const retainedToolCallIds = new Set(completedToolCallIds);
 			for (const { toolCallId } of bufferedCursorResults) retainedToolCallIds.add(toolCallId);
 			const errorMsg: AssistantMessage =
@@ -1727,7 +1731,7 @@ export class Agent {
 					this.#emit({ type: "message_end", message: toolResult });
 					toolResults.push(toolResult);
 				}
-				const contextMessage = this.#buildCursorAdditionalContextMessage(this.#cursorToolResultBuffer, errorMsg);
+				const contextMessage = this.#buildCursorAdditionalContextMessage(bufferedCursorEntries, errorMsg);
 				if (contextMessage) {
 					this.#emit({ type: "message_start", message: contextMessage });
 					this.appendMessage(contextMessage);

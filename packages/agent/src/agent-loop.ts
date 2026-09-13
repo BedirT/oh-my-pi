@@ -77,7 +77,6 @@ import type {
 	AgentTool,
 	AgentToolArgStream,
 	AgentToolCall,
-	AgentToolContext,
 	AgentToolResult,
 	AgentTurnEndContext,
 	AsideMessage,
@@ -94,6 +93,7 @@ import {
 	isSoftToolRequirement,
 	SPECULATIVE_STREAM_SESSION,
 } from "./types";
+import { withAdditionalContext } from "./tool-context";
 import { yieldIfDue } from "./utils/yield";
 /** Stop-details marker for a provider error after assistant content/tool args already streamed. */
 export const STREAM_INTERRUPTED_AFTER_CONTENT_STOP_DETAIL = "stream_interrupted_after_content";
@@ -1009,6 +1009,31 @@ function emitInputMessages(stream: EventStream<AgentEvent, AgentMessage[]>, mess
 }
 
 /**
+ * Append passive tool-call context after its results as a developer message.
+ * Returns the injected message for turn-end bookkeeping, or undefined when
+ * there is nothing to inject. Shared by the normal tool-call path and the
+ * resume-tail replay so replayed calls deliver context identically.
+ */
+function injectExecutionAdditionalContext(
+	currentContext: AgentContext,
+	newMessages: AgentMessage[],
+	stream: EventStream<AgentEvent, AgentMessage[]>,
+	additionalContext: string | undefined,
+): AgentMessage | undefined {
+	if (additionalContext === undefined) return undefined;
+	const contextMessage: AgentMessage = {
+		role: "developer",
+		content: [{ type: "text", text: additionalContext }],
+		attribution: "agent",
+		timestamp: Date.now(),
+	};
+	currentContext.messages.push(contextMessage);
+	newMessages.push(contextMessage);
+	emitInputMessages(stream, [contextMessage]);
+	return contextMessage;
+}
+
+/**
  * Resolve aside entries at the moment the loop is about to inject them. Each entry
  * is either a ready {@link AgentMessage} or a sync thunk evaluated here so the
  * producer can make the final inject-or-drop decision (return null) against
@@ -1124,8 +1149,15 @@ async function runLoopBody(
 				currentContext.messages.push(result);
 				newMessages.push(result);
 			}
+			const resumeContextMessage = injectExecutionAdditionalContext(
+				currentContext,
+				newMessages,
+				stream,
+				executionResult.additionalContext,
+			);
 			await emitTurnEnd(stream, currentContext, resumeTail, executionResult.toolResults, config, signal, {
 				willContinue: !isDeadlineExceeded(config.deadline),
+				...(resumeContextMessage ? { additionalMessages: [resumeContextMessage] } : {}),
 			});
 			turnOpen = false;
 			// A tool hook may mark its completed result as terminal (e.g. subagent
@@ -1485,18 +1517,13 @@ async function runLoopBody(
 						currentContext.messages.push(result);
 						newMessages.push(result);
 					}
-					if (executionResult.additionalContext !== undefined) {
-						const contextMessage: AgentMessage = {
-							role: "developer",
-							content: [{ type: "text", text: executionResult.additionalContext }],
-							attribution: "agent",
-							timestamp: Date.now(),
-						};
-						currentContext.messages.push(contextMessage);
-						newMessages.push(contextMessage);
-						emitInputMessages(stream, [contextMessage]);
-						additionalMessages.push(contextMessage);
-					}
+					const injectedContext = injectExecutionAdditionalContext(
+						currentContext,
+						newMessages,
+						stream,
+						executionResult.additionalContext,
+					);
+					if (injectedContext) additionalMessages.push(injectedContext);
 				} else if (toolCalls.length > 0) {
 					SpeculativeOperationCoordinator.discardForMessage(
 						message,
@@ -3021,7 +3048,6 @@ async function executeToolCalls(
 					isError = true;
 					return;
 				}
-
 				if (record.prepareError !== undefined) throw record.prepareError;
 				if (record.blocked) {
 					throw new ToolCallBlockedError(record.blockReason);
@@ -3048,9 +3074,7 @@ async function executeToolCalls(
 
 				if (!completedToolExecution) {
 					const addAdditionalContext = (context: string): void => {
-						if (typeof context === "string" && context.trim().length > 0) {
-							record.additionalContext.push(context);
-						}
+						record.additionalContext.push(context);
 					};
 					const baseToolContext = getToolContext?.({
 						batchId,
@@ -3066,18 +3090,9 @@ async function executeToolCalls(
 					// not pass through `beforeToolCall` themselves. They inherit this
 					// context and report passive hook context through the callback, so
 					// it joins the root call's prepared context at the batch boundary.
-					const toolContext: AgentToolContext =
-						baseToolContext === undefined
-							? ({ addAdditionalContext } as AgentToolContext)
-							: (Object.create(Object.getPrototypeOf(baseToolContext), {
-									...Object.getOwnPropertyDescriptors(baseToolContext),
-									addAdditionalContext: {
-										configurable: true,
-										enumerable: true,
-										value: addAdditionalContext,
-										writable: true,
-									},
-								}) as AgentToolContext);
+					// Augmentation preserves the host object's private brand: a
+					// structural clone would break `#private`-backed members.
+					const toolContext = withAdditionalContext(baseToolContext, addAdditionalContext);
 					const streamSession = speculationCoordinator?.takeStreamSession(toolCall.id);
 					if (streamSession) {
 						toolContext[SPECULATIVE_STREAM_SESSION] = streamSession;

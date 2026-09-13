@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type {
-	AgentEvent,
-	AgentTool,
-	AgentToolContext,
-	AgentToolResult,
-	AgentToolUpdateCallback,
+import {
+	type AgentEvent,
+	type AgentTool,
+	type AgentToolContext,
+	type AgentToolResult,
+	type AgentToolUpdateCallback,
+	withAdditionalContext,
 } from "@oh-my-pi/pi-agent-core";
 import type {
 	CursorMcpCall,
@@ -238,21 +239,12 @@ function createToolContext(options: CursorExecBridgeOptions): {
 } {
 	const additionalContext: string[] = [];
 	const addAdditionalContext = (context: string): void => {
-		if (typeof context === "string" && context.trim().length > 0) additionalContext.push(context);
+		additionalContext.push(context);
 	};
 	const baseToolContext = options.getToolContext?.();
-	const context =
-		baseToolContext === undefined
-			? ({ addAdditionalContext } as AgentToolContext)
-			: (Object.create(Object.getPrototypeOf(baseToolContext), {
-					...Object.getOwnPropertyDescriptors(baseToolContext),
-					addAdditionalContext: {
-						configurable: true,
-						enumerable: true,
-						value: addAdditionalContext,
-						writable: true,
-					},
-				}) as AgentToolContext);
+	// Augmentation preserves the host object's private brand: a structural
+	// clone would break `#private`-backed members (see `withAdditionalContext`).
+	const context = withAdditionalContext(baseToolContext, addAdditionalContext);
 	return { context, additionalContext };
 }
 

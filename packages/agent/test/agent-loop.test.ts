@@ -8,6 +8,7 @@ import {
 	TERMINAL_TOOL_RESULT_ABORT_REASON,
 } from "@oh-my-pi/pi-agent-core/agent-loop";
 import { SpeculativeOperationCoordinator } from "@oh-my-pi/pi-agent-core/speculative-execution";
+import { withAdditionalContext } from "@oh-my-pi/pi-agent-core/tool-context";
 import type {
 	AgentContext,
 	AgentEvent,
@@ -4667,6 +4668,199 @@ describe("agentLoopContinue with AgentMessage", () => {
 		expect(baseToolContext).not.toHaveProperty("addAdditionalContext");
 		const developer = mock.calls[1]?.context.messages.find(message => message.role === "developer");
 		expect(developer?.content).toEqual([{ type: "text", text: "context from custom tool context" }]);
+	});
+
+	it("preserves the private brand of custom tool contexts", async () => {
+		const toolSchema = type({ value: "string" });
+		class BrandedToolContext {
+			#calls = 0;
+
+			get callCount(): number {
+				return this.#calls;
+			}
+
+			recordCall(): number {
+				this.#calls += 1;
+				return this.#calls;
+			}
+		}
+		const baseToolContext = new BrandedToolContext();
+		let observedCalls: number | undefined;
+		let observedCount: number | undefined;
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			async execute(_toolCallId, params, _signal, _onUpdate, toolContext) {
+				const branded = toolContext as unknown as BrandedToolContext;
+				observedCalls = branded.recordCall();
+				observedCount = branded.callCount;
+				toolContext?.addAdditionalContext?.("context from branded tool context");
+				return {
+					content: [{ type: "text", text: `echoed: ${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+		const context: AgentContext = { systemPrompt: [""], messages: [], tools: [tool] };
+		const mock = createMockModel({
+			responses: [
+				{ content: [{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }] },
+				{ content: ["done"] },
+			],
+		});
+		const config: AgentLoopConfig = {
+			model: mock.model,
+			convertToLlm: messages =>
+				messages.filter(
+					message =>
+						message.role === "user" ||
+						message.role === "developer" ||
+						message.role === "assistant" ||
+						message.role === "toolResult",
+				) as Message[],
+			getToolContext: () => baseToolContext as unknown as AgentToolContext,
+		};
+
+		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, mock.stream);
+		for await (const _ of stream) {
+			// drain
+		}
+
+		// A structural clone would throw `TypeError: Receiver must be an
+		// instance of class` on both lines above; forwarding to the original
+		// receiver keeps the `#private` brand intact.
+		expect(observedCalls).toBe(1);
+		expect(observedCount).toBe(1);
+		expect(baseToolContext.callCount).toBe(1);
+		expect(baseToolContext).not.toHaveProperty("addAdditionalContext");
+		const developer = mock.calls[1]?.context.messages.find(message => message.role === "developer");
+		expect(developer?.content).toEqual([{ type: "text", text: "context from branded tool context" }]);
+	});
+
+	it("delivers additionalContext when replaying an unpaired tool tail", async () => {
+		const toolSchema = type({ value: "string" });
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			async execute(_toolCallId, params) {
+				return {
+					content: [{ type: "text", text: `echoed: ${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+		const tail: AssistantMessage = {
+			role: "assistant",
+			content: [{ type: "toolCall", id: "tail-1", name: "echo", arguments: { value: "replay me" } }],
+			api: "anthropic-messages",
+			provider: "anthropic",
+			model: "claude-sonnet-4-5",
+			usage: {
+				input: 0,
+				output: 0,
+				cacheRead: 0,
+				cacheWrite: 0,
+				totalTokens: 0,
+				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+			},
+			stopReason: "toolUse",
+			timestamp: Date.now(),
+		};
+		const context: AgentContext = {
+			systemPrompt: [""],
+			messages: [createUserMessage("start over"), tail],
+			tools: [tool],
+		};
+		const mock = createMockModel({ responses: [{ content: ["done"] }] });
+		const config: AgentLoopConfig = {
+			model: mock.model,
+			convertToLlm: messages =>
+				messages.filter(
+					message =>
+						message.role === "user" ||
+						message.role === "developer" ||
+						message.role === "assistant" ||
+						message.role === "toolResult",
+				) as Message[],
+			beforeToolCall: async () => ({ additionalContext: "replay guidance" }),
+		};
+
+		const stream = agentLoopContinue(context, config, undefined, mock.stream);
+		for await (const _ of stream) {
+			// drain
+		}
+
+		const newMessages = await stream.result();
+		const toolResultIndex = newMessages.findIndex(
+			message => message.role === "toolResult" && message.toolCallId === "tail-1",
+		);
+		expect(toolResultIndex).toBeGreaterThan(-1);
+		const developer = newMessages[toolResultIndex + 1];
+		if (developer?.role !== "developer") throw new Error("Expected developer message after replayed tool result");
+		expect(developer.content).toEqual([{ type: "text", text: "replay guidance" }]);
+		expect(mock.calls[0]?.context.messages).toContainEqual(developer);
+	});
+
+	describe("withAdditionalContext", () => {
+		it("returns a plain carrier when no base context exists", () => {
+			const delivered: string[] = [];
+			const context = withAdditionalContext(undefined, delivered.push.bind(delivered));
+			context.addAdditionalContext?.("hello");
+			context.addAdditionalContext?.("   ");
+			expect(delivered).toEqual(["hello"]);
+		});
+
+		it("shadows a host-supplied callback with the loop-owned one", () => {
+			const delivered: string[] = [];
+			const base = {
+				addAdditionalContext: () => {
+					throw new Error("host callback must not run");
+				},
+			};
+			const context = withAdditionalContext(base as AgentToolContext, value => {
+				delivered.push(value);
+			});
+			context.addAdditionalContext?.("routed");
+			expect(delivered).toEqual(["routed"]);
+		});
+
+		it("forwards accessor access to the original receiver", () => {
+			let backing = 0;
+			const base = {
+				get count(): number {
+					return backing;
+				},
+				set count(value: number) {
+					backing = value;
+				},
+			};
+			const context = withAdditionalContext(base as AgentToolContext, () => {});
+			// Test double carries more shape than the interface; name the view once.
+			const view = context as unknown as { count: number };
+			expect(view.count).toBe(0);
+			view.count = 41;
+			expect(backing).toBe(41);
+			expect(view.count).toBe(41);
+			expect(base).not.toHaveProperty("addAdditionalContext");
+		});
+
+		it("augments frozen host contexts without mutating them", () => {
+			const delivered: string[] = [];
+			const base = Object.freeze({ batchId: "frozen-batch" });
+			const context = withAdditionalContext(base as AgentToolContext, value => {
+				delivered.push(value);
+			});
+			// Frozen fixture shape is wider than the interface; name the view once.
+			const frozenView = context as unknown as { batchId: string };
+			expect(frozenView.batchId).toBe("frozen-batch");
+			context.addAdditionalContext?.("frozen context");
+			expect(delivered).toEqual(["frozen context"]);
+			expect(base).not.toHaveProperty("addAdditionalContext");
+		});
 	});
 
 	it("does not inject beforeToolCall context from blocked calls", async () => {
