@@ -6,10 +6,6 @@
 
 - OpenCode Zen GPT-6 Astra requests now use the Responses endpoint instead of failing through chat completions with HTTP 500 ([#12030](https://github.com/can1357/oh-my-pi/issues/12030)).
 
-### Removed
-
-- Removed uncalled catalog helpers across `compat/behavior`, `compat/taxonomy`, `hosts`, and `utils` (no shipped path reached them) ([#12068](https://github.com/can1357/oh-my-pi/pull/12068) by [@H4vC](https://github.com/H4vC)).
-
 ## [18.1.20] - 2026-09-13
 
 ### Fixed

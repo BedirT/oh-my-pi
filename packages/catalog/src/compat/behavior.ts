@@ -36,6 +36,57 @@ export function isLikelyOpenAIResponsesId(model: string): boolean {
 }
 
 /**
+ * Additional catalog-declared operations for a discovered provider/model pair
+ * (e.g. `generate_image`), augmenting provider discovery metadata.
+ */
+export function modelOperationOverrides(provider: string, model: string): readonly string[] {
+	const lower = model.toLowerCase();
+	const out: string[] = [];
+	for (const rule of behavior.modelOperations) {
+		if (rule.provider !== provider || !matchesList(rule.models, lower, lower)) continue;
+		for (const operation of rule.operations) {
+			if (!out.includes(operation)) out.push(operation);
+		}
+	}
+	return out;
+}
+
+/**
+ * Splits a Cursor effort-suffixed OpenAI sibling id into its base id and
+ * declared effort tier. The family gate requires the declared marker
+ * (`gpt-`) followed immediately by an ASCII digit; matching stays
+ * case-sensitive to preserve Cursor wire-id behavior.
+ */
+export function cursorEffortSuffix(model: string): { base: string; tier: string } | undefined {
+	const rule = behavior.cursorEffort;
+	if (!rule) return undefined;
+	for (const tier of rule.tiers) {
+		if (!model.endsWith(tier)) continue;
+		const prefix = model.slice(0, model.length - tier.length);
+		if (!prefix.endsWith("-")) continue;
+		const base = prefix.slice(0, -1);
+		let family = false;
+		let index = base.indexOf(rule.familyMarker);
+		while (index !== -1) {
+			const next = base.charCodeAt(index + rule.familyMarker.length);
+			if (next >= 48 && next <= 57) {
+				family = true;
+				break;
+			}
+			index = base.indexOf(rule.familyMarker, index + 1);
+		}
+		if (!family) return undefined;
+		return { base, tier };
+	}
+	return undefined;
+}
+
+/** Fixed Cursor `requestedModel` parameters declared for an exact wire model. */
+export function cursorModelParameters(model: string): readonly { id: string; value: string }[] {
+	return behavior.cursorParameters.filter(parameter => parameter.model === model);
+}
+
+/**
  * The catalog-declared quota scope or display tier for a provider model id.
  * Exact authored memberships win; provider-authored substring fallbacks
  * preserve quota semantics for newly discovered ids.
@@ -50,6 +101,16 @@ export function quotaTierFor(provider: string, model: string): string | undefine
 		if (model.includes(fallback.substring)) return fallback.label;
 	}
 	return undefined;
+}
+
+/** Whether a provider has catalog-authored model quota scopes. */
+export function hasQuotaTierPolicy(provider: string): boolean {
+	return behavior.quotaTiers.some(rule => rule.provider === provider);
+}
+
+/** The provider-default wire model for a model-less hosted operation. */
+export function hostedDefaultModel(provider: string): string | undefined {
+	return behavior.hostedDefaults.find(entry => entry.provider === provider)?.model;
 }
 
 /** One resolved API route for a provider model id. */

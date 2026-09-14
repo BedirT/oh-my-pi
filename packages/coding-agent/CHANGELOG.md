@@ -17,7 +17,7 @@
 
 ### Removed
 
-- Removed dead code only: the uncalled commit CLI parser, subagent spawn helper, legacy exclusion helpers, `sharpshooter` barrel, `findConfigFileWithMeta`, and the orphaned `PI_SUBPROCESS_CMD` doc row ([#12068](https://github.com/can1357/oh-my-pi/pull/12068) by [@H4vC](https://github.com/H4vC)).
+- Removed dead code only: the uncalled commit CLI parser, subagent spawn helper, legacy exclusion helpers, `sharpshooter` barrel, and the orphaned `PI_SUBPROCESS_CMD` doc row ([#12068](https://github.com/can1357/oh-my-pi/pull/12068) by [@H4vC](https://github.com/H4vC)).
 
 ## [18.1.21] - 2026-09-14
 

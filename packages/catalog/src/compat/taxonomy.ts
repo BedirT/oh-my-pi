@@ -394,9 +394,51 @@ export function routingVariantPlain(provider: string, wireModel: string): string
 	return undefined;
 }
 
+/** Whether any routing-variant suffix is declared for `provider`. */
+export function hasRoutingVariants(provider: string): boolean {
+	const lower = provider.toLowerCase();
+	return rules.taxonomy.collapse.routingVariants.some(rule => rule.providers.includes(lower));
+}
+
+/** Whether `provider`'s discovery recovers canonical intrinsic parameters. */
+export function recoversCanonicalParams(provider: string): boolean {
+	const lower = provider.toLowerCase();
+	return rules.taxonomy.discovery.canonicalRecovery.includes(lower);
+}
+
+/** The full responses-route hint group containing `provider`, when declared. */
+export function responsesHintGroup(provider: string): readonly string[] | undefined {
+	const lower = provider.toLowerCase();
+	return rules.taxonomy.discovery.responsesHintGroups.find(group => group.includes(lower));
+}
+
 /** Exact model ids authored onto a provider's responses route. */
 export function responsesRouteModels(provider: string): readonly string[] | undefined {
 	return rules.taxonomy.discovery.responsesRouteModels[provider.toLowerCase()];
+}
+
+/** Whether `provider` declares dynamic effort-sibling families. */
+export function supportsDynamicEffortSiblings(provider: string): boolean {
+	const lower = provider.toLowerCase();
+	return rules.taxonomy.collapse.effortFamilies.some(family => family.provider === lower && family.logical.length > 0);
+}
+
+/** The reviewed effort-family seeds declared for `provider`. */
+export function effortFamiliesFor(provider: string): readonly { logical: string; aliases: readonly string[] }[] {
+	const lower = provider.toLowerCase();
+	return rules.taxonomy.collapse.effortFamilies.filter(family => family.provider === lower);
+}
+
+/** The standard-lane id when `model` ends in a declared effort lane for `provider`. */
+export function stripEffortLane(provider: string, model: string): string {
+	const lowerProvider = provider.toLowerCase();
+	for (const lane of rules.taxonomy.collapse.lanes) {
+		if (!lane.providers.includes(lowerProvider)) continue;
+		const split = model.length - lane.suffix.length;
+		if (split < 0) continue;
+		if (model.slice(split).toLowerCase() === lane.suffix) return model.slice(0, split);
+	}
+	return model;
 }
 
 /** The declared collapse suffix vocabulary (read-only view for collapse logic). */
