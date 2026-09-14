@@ -1158,7 +1158,6 @@ export function buildParams(
 		context,
 		strictResponsesPairing,
 		supportsImageDetailOriginal: model.compat.supportsImageDetailOriginal,
-		supportsDeveloperRole: model.compat.supportsDeveloperRole,
 		nativeHistory: {
 			replay: shouldReplayNativeHistory,
 			filterReasoning: policy.reasoning.filterReasoningHistory,

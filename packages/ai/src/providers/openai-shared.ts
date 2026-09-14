@@ -1827,8 +1827,6 @@ export interface BuildResponsesInputOptions<TApi extends Api> {
 	context: Context;
 	strictResponsesPairing: boolean;
 	supportsImageDetailOriginal: boolean;
-	/** Whether dynamic developer turns may retain their instruction-priority role on this endpoint. */
-	supportsDeveloperRole?: boolean;
 	systemRole?: "system" | "developer";
 	nativeHistory?: {
 		replay: boolean;
@@ -2014,12 +2012,8 @@ export function buildResponsesInput<TApi extends Api>(options: BuildResponsesInp
 				options.developerStringContent && msg.role === "developer" && typeof msg.content === "string"
 					? msg.content.toWellFormed()
 					: undefined;
-			const useDeveloperRole =
-				msg.role === "developer" &&
-				options.supportsDeveloperRole === true &&
-				(typeof msg.content === "string" || msg.content.every(item => item.type === "text"));
 			messages.push({
-				role: useDeveloperRole ? "developer" : "user",
+				role: "user",
 				content:
 					developerText !== undefined
 						? escapeControlTokens

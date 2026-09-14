@@ -4,7 +4,6 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { type } from "@oh-my-pi/omptype";
 import type { AgentEvent, AgentTool, AgentToolContext } from "@oh-my-pi/pi-agent-core";
-import { getToolResultAdditionalContext } from "@oh-my-pi/pi-ai";
 import { type BlockState, handleServerMessage, type ToolCallState } from "@oh-my-pi/pi-ai/providers/cursor";
 import { buildPiLsResult, piTruncation } from "@oh-my-pi/pi-ai/providers/cursor/exec-modern";
 import type { AssistantMessage } from "@oh-my-pi/pi-ai/types";
@@ -56,7 +55,7 @@ function createTestSession(cwd: string, overrides: Partial<ToolSession> = {}): T
  * seeing a name arrive here proves the wrapper is present, since an unwrapped
  * tool never announces.
  */
-function passthroughRunner(seen: string[] = [], additionalContext?: string): ExtensionRunner {
+function passthroughRunner(seen: string[] = []): ExtensionRunner {
 	return {
 		hasHandlers: () => true,
 		consumeToolCallEmitted: () => false,
@@ -65,7 +64,7 @@ function passthroughRunner(seen: string[] = [], additionalContext?: string): Ext
 		},
 		emitToolCall: async (event: { toolName: string }) => {
 			seen.push(event.toolName);
-			return additionalContext ? { additionalContext } : undefined;
+			return undefined;
 		},
 		emitToolResult: async () => undefined,
 	} as unknown as ExtensionRunner;
@@ -896,29 +895,6 @@ describe("CursorExecHandlers error results", () => {
 	});
 });
 
-it("carries passive hook context through Cursor shell-stream results", async () => {
-	const bash: AgentTool = {
-		name: "bash",
-		label: "Bash",
-		description: "fixture shell",
-		parameters: type({ command: "string" }),
-		async execute() {
-			return { content: [{ type: "text", text: "done" }], details: {} };
-		},
-	};
-	const handlers = new CursorExecHandlers({
-		cwd: ".",
-		tools: new Map([["bash", new ExtensionToolWrapper(bash, passthroughRunner([], "shell context"))]]),
-	});
-
-	const result = await handlers.shellStream(
-		create(ShellArgsSchema, { toolCallId: "call-shell-context", command: "true" }),
-		{ onStdout: () => {}, onStderr: () => {} },
-	);
-
-	expect(getToolResultAdditionalContext(result)).toEqual(["shell context"]);
-});
-
 describe("CursorExecHandlers mounted tool bridge", () => {
 	it("executes MCP tools resolved from the xd:// registry", async () => {
 		const mountedTool: AgentTool = {
@@ -947,90 +923,6 @@ describe("CursorExecHandlers mounted tool bridge", () => {
 
 		expect(result.isError).toBe(false);
 		expect(result.content).toEqual([{ type: "text", text: "reported" }]);
-	});
-
-	it("carries passive hook context through mounted Cursor tool results", async () => {
-		const mountedTool: AgentTool = {
-			name: "mcp__fixture_context",
-			label: "Fixture Context",
-			description: "reports passive context",
-			parameters: type({}),
-			async execute() {
-				return { content: [{ type: "text", text: "reported" }], details: {} };
-			},
-		};
-		const wrapped = new ExtensionToolWrapper(mountedTool, passthroughRunner([], "mounted context"));
-		const handlers = new CursorExecHandlers({
-			cwd: ".",
-			tools: new Map([[mountedTool.name, wrapped]]),
-			getExecutableTool: name => (name === mountedTool.name ? wrapped : undefined),
-		});
-
-		const result = await handlers.mcp({
-			name: mountedTool.name,
-			providerIdentifier: "pi-agent",
-			toolName: mountedTool.name,
-			toolCallId: "call-mounted-context",
-			args: {},
-			rawArgs: {},
-		});
-
-		expect(getToolResultAdditionalContext(result)).toEqual(["mounted context"]);
-	});
-
-	it("preserves custom tool context prototypes and property descriptors", async () => {
-		class CustomToolContext {
-			declare readonly hiddenValue: string;
-
-			readHiddenValue(): string {
-				return this.hiddenValue;
-			}
-		}
-		const baseToolContext = new CustomToolContext();
-		Object.defineProperty(baseToolContext, "hiddenValue", {
-			configurable: false,
-			enumerable: false,
-			value: "preserved",
-			writable: false,
-		});
-		let receivedToolContext: (CustomToolContext & AgentToolContext) | undefined;
-		const mountedTool: AgentTool = {
-			name: "mcp__fixture_custom_context",
-			label: "Fixture Custom Context",
-			description: "reports context through a custom tool context",
-			parameters: type({}),
-			async execute(_toolCallId, _params, _signal, _onUpdate, context) {
-				receivedToolContext = context as CustomToolContext & AgentToolContext;
-				context?.addAdditionalContext?.("context from custom Cursor tool context");
-				return { content: [{ type: "text", text: "reported" }], details: {} };
-			},
-		};
-		const handlers = new CursorExecHandlers({
-			cwd: ".",
-			tools: new Map([[mountedTool.name, mountedTool]]),
-			getExecutableTool: name => (name === mountedTool.name ? mountedTool : undefined),
-			getToolContext: () => baseToolContext as unknown as AgentToolContext,
-		});
-
-		const result = await handlers.mcp({
-			name: mountedTool.name,
-			providerIdentifier: "pi-agent",
-			toolName: mountedTool.name,
-			toolCallId: "call-mounted-custom-context",
-			args: {},
-			rawArgs: {},
-		});
-
-		expect(Object.getPrototypeOf(receivedToolContext)).toBe(CustomToolContext.prototype);
-		expect(receivedToolContext?.readHiddenValue()).toBe("preserved");
-		expect(Object.getOwnPropertyDescriptor(receivedToolContext, "hiddenValue")).toEqual({
-			configurable: false,
-			enumerable: false,
-			value: "preserved",
-			writable: false,
-		});
-		expect(baseToolContext).not.toHaveProperty("addAdditionalContext");
-		expect(getToolResultAdditionalContext(result)).toEqual(["context from custom Cursor tool context"]);
 	});
 
 	it("routes wrapped mounted devices through the approval gate", async () => {

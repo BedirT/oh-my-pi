@@ -9,7 +9,6 @@ import {
 	type ToolCallState,
 } from "@oh-my-pi/pi-ai/providers/cursor";
 import type { AssistantMessage, CursorExecHandlers, ToolResultMessage } from "@oh-my-pi/pi-ai/types";
-import { setToolResultAdditionalContext } from "@oh-my-pi/pi-ai/types";
 import { kCursorExecResolved, setStreamingPartialJson } from "@oh-my-pi/pi-ai/utils/block-symbols";
 import { AssistantMessageEventStream } from "@oh-my-pi/pi-ai/utils/event-stream";
 import {
@@ -62,9 +61,6 @@ import {
 	RequestContextArgsSchema,
 	ShellAllowlistPrecheckArgsSchema,
 	ShellArgsSchema,
-	ShellFailureSchema,
-	ShellResultSchema,
-	ShellSuccessSchema,
 	SmartModeClassifierArgsSchema,
 	SubagentArgsSchema,
 	SubagentAwaitArgsSchema,
@@ -1373,126 +1369,6 @@ describe("Cursor modern exec frames: Pi tools", () => {
 		expect(answer.case).toBe("miniSweAgentBashResult");
 		if (answer.case !== "miniSweAgentBashResult") throw new Error("unreachable");
 		expect(answer.value.result.case).toBe("success");
-	});
-});
-
-describe("Cursor shell passive context", () => {
-	const cases = [
-		{ requestCase: "shellArgs", responseCase: "shellResult", resultCase: "success" },
-		{ requestCase: "shellStreamArgs", responseCase: "shellResult", resultCase: "failure" },
-		{ requestCase: "miniSweAgentBashArgs", responseCase: "miniSweAgentBashResult", resultCase: "success" },
-	] as const;
-
-	for (const { requestCase, responseCase, resultCase } of cases) {
-		it(`preserves native passive context while sanitizing ${requestCase} ${resultCase}`, async () => {
-			const args = create(ShellArgsSchema, {
-				command: "printf provider",
-				workingDirectory: "/repo",
-				toolCallId: `call-${requestCase}`,
-			});
-			const message: ExecServerMessage["message"] =
-				requestCase === "shellArgs"
-					? { case: "shellArgs", value: args }
-					: requestCase === "shellStreamArgs"
-						? { case: "shellStreamArgs", value: args }
-						: { case: "miniSweAgentBashArgs", value: args };
-			const request = buildExecMessage(message);
-			request.acceptHookAdditionalContexts = true;
-
-			const providerResult =
-				resultCase === "success"
-					? create(ShellResultSchema, {
-							result: {
-								case: "success",
-								value: create(ShellSuccessSchema, {
-									command: args.command,
-									workingDirectory: args.workingDirectory,
-									exitCode: 0,
-									stdout: "provider result",
-								}),
-							},
-						})
-					: create(ShellResultSchema, {
-							result: {
-								case: "failure",
-								value: create(ShellFailureSchema, {
-									command: args.command,
-									workingDirectory: args.workingDirectory,
-									exitCode: 1,
-									stderr: "provider failure",
-								}),
-							},
-						});
-			const transcriptResult = toolResult("transcript result", {
-				toolCallId: args.toolCallId,
-				toolName: "bash",
-				isError: resultCase === "failure",
-			});
-			setToolResultAdditionalContext(transcriptResult, [`context for ${requestCase}`]);
-
-			const { frames } = await dispatchExec(request, {
-				execHandlers: {
-					async shell() {
-						return { result: providerResult, toolResult: transcriptResult };
-					},
-				},
-			});
-
-			const envelope = frames
-				.map(frame => (frame.message.case === "execClientMessage" ? frame.message.value : undefined))
-				.find(frame => frame?.message.case === responseCase);
-			expect(
-				envelope?.hookAdditionalContexts.map(({ hookEventName, content }) => ({ hookEventName, content })),
-			).toEqual([{ hookEventName: "tool_call", content: `context for ${requestCase}` }]);
-			expect(envelope?.message).toMatchObject({
-				case: responseCase,
-				value: {
-					result: {
-						case: resultCase,
-						value: resultCase === "success" ? { stdout: "provider result" } : { stderr: "provider failure" },
-					},
-				},
-			});
-		});
-	}
-
-	it("preserves the legacy passive-context fallback while sanitizing shell results", async () => {
-		const args = create(ShellArgsSchema, {
-			command: "printf provider",
-			workingDirectory: "/repo",
-			toolCallId: "call-shell-fallback",
-		});
-		const providerResult = create(ShellResultSchema, {
-			result: {
-				case: "success",
-				value: create(ShellSuccessSchema, {
-					command: args.command,
-					workingDirectory: args.workingDirectory,
-					exitCode: 0,
-					stdout: "provider result",
-				}),
-			},
-		});
-		const transcriptResult = toolResult("transcript result", {
-			toolCallId: args.toolCallId,
-			toolName: "bash",
-		});
-		setToolResultAdditionalContext(transcriptResult, ["legacy shell context"]);
-
-		const { frames } = await dispatchExec(buildExecMessage({ case: "shellArgs", value: args }), {
-			execHandlers: {
-				async shell() {
-					return { result: providerResult, toolResult: transcriptResult };
-				},
-			},
-		});
-
-		const answer = soleResult(frames);
-		expect(answer.case).toBe("shellResult");
-		if (answer.case !== "shellResult" || answer.value.result.case !== "success") {
-			throw new Error("expected successful shell result");
-		}
-		expect(answer.value.result.value.stdout).toBe("transcript result\nlegacy shell context");
 	});
 });
 

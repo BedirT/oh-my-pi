@@ -877,16 +877,11 @@ function resolveBedrockPolicy(spec: ModelSpec<"bedrock-converse-stream">, axes: 
 	// Prompt-cache checkpoint tables are rule-owned (class/family/revision
 	// rules under `on "amazon-bedrock"`); the baseline is the conservative
 	// no-checkpoint shape.
-	const facts = new IdentityFacts(resolveIdentity(spec));
 	const compat: ResolvedBedrockCompat = {
 		promptCacheMode: "none",
 		supportsLongPromptCacheRetention: false,
 		promptCacheMinimumTokens: 0,
 		promptCacheMaximumCheckpoints: 0,
-		// The mid-conversation system role is available on supported Claude
-		// generations (Opus 4.8+, Sonnet/Fable/Mythos 5+), matching the
-		// first-party API's adaptive-generation floor.
-		supportsMidConversationSystem: facts.anthropicAdaptiveGenAtLeast("4.8"),
 	};
 	// Reasoning capability is a mechanism gate; adaptive-lineage duration is rule-owned.
 	compat.streamIdleTimeoutMs = spec.reasoning ? BEDROCK_REASONING_STREAM_IDLE_TIMEOUT_MS : undefined;

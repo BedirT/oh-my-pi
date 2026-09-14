@@ -1096,30 +1096,6 @@ export interface ToolResultMessage<TDetails = unknown> {
 	timestamp: number; // Unix timestamp in milliseconds
 }
 
-/**
- * Carries passive model-visible context alongside a provider-side tool result
- * without serializing it as part of the persisted result payload.
- */
-export const kToolResultAdditionalContext = Symbol("tool-result.additional-context");
-export type ToolResultAdditionalContextCarrier = object & {
-	[kToolResultAdditionalContext]?: readonly string[];
-};
-
-export function getToolResultAdditionalContext(
-	result: ToolResultAdditionalContextCarrier | null | undefined,
-): readonly string[] | undefined {
-	return result?.[kToolResultAdditionalContext];
-}
-
-export function setToolResultAdditionalContext(
-	result: ToolResultAdditionalContextCarrier,
-	context: readonly string[],
-): void {
-	if (context.length > 0) {
-		Object.defineProperty(result, kToolResultAdditionalContext, { value: context, configurable: true });
-	}
-}
-
 export type Message = UserMessage | DeveloperMessage | AssistantMessage | ToolResultMessage;
 
 export type CursorExecHandlerResult<T> = { result: T; toolResult?: ToolResultMessage } | T | ToolResultMessage;

@@ -67,7 +67,6 @@ import {
 	GrepSuccessSchema,
 	type GrepUnionResult,
 	GrepUnionResultSchema,
-	HookAdditionalContextSchema,
 	KvClientMessageSchema,
 	type KvServerMessage,
 	ListMcpResourcesErrorSchema,
@@ -195,7 +194,6 @@ import type {
 	ToolCall,
 	ToolResultMessage,
 } from "../types";
-import { getToolResultAdditionalContext, setToolResultAdditionalContext } from "../types";
 import { normalizeSystemPrompts, normalizeToolCallId } from "../utils";
 import {
 	type CursorExecResolvedCarrier,
@@ -1322,20 +1320,17 @@ function sanitizeShellExecResult(execResult: ShellResult): ShellResult {
 		case "success":
 		case "failure": {
 			const value = result.value;
-			return Object.create(Object.getPrototypeOf(execResult), {
-				...Object.getOwnPropertyDescriptors(execResult),
+			return {
+				...execResult,
 				result: {
-					...Object.getOwnPropertyDescriptor(execResult, "result"),
+					case: result.case,
 					value: {
-						case: result.case,
-						value: {
-							...value,
-							stdout: value.stdout ? sanitizeText(value.stdout) : value.stdout,
-							stderr: value.stderr ? sanitizeText(value.stderr) : value.stderr,
-						},
+						...value,
+						stdout: value.stdout ? sanitizeText(value.stdout) : value.stdout,
+						stderr: value.stderr ? sanitizeText(value.stderr) : value.stderr,
 					},
 				},
-			}) as ShellResult;
+			} as ShellResult;
 		}
 		default:
 			return execResult;
@@ -2521,12 +2516,6 @@ async function handleExecServerMessage(
 	}
 }
 
-const kCursorExecContextFallback = Symbol("cursor-exec.context-fallback");
-
-type CursorExecContextCarrier = object & {
-	[kCursorExecContextFallback]?: unknown;
-};
-
 /**
  * Send one typed answer on the exec channel.
  *
@@ -2541,20 +2530,10 @@ function sendExecClientMessage<TCase extends NonNullable<ExecClientMessage["mess
 	messageCase: TCase,
 	value: Extract<ExecClientMessage["message"], { case: TCase }>["value"],
 ): void {
-	const additionalContext = getToolResultAdditionalContext(value)?.filter(context => context.trim().length > 0);
-	const acceptsAdditionalContext = execMsg.acceptHookAdditionalContexts === true;
-	const fallback = (value as CursorExecContextCarrier | null)?.[kCursorExecContextFallback];
-	const wireValue = !acceptsAdditionalContext && fallback !== undefined ? fallback : value;
 	const execClientMessage = create(ExecClientMessageSchema, {
 		id: execMsg.id,
 		execId: execMsg.execId,
-		message: { case: messageCase, value: wireValue } as ExecClientMessage["message"],
-		hookAdditionalContexts:
-			acceptsAdditionalContext && additionalContext
-				? additionalContext.map(content =>
-						create(HookAdditionalContextSchema, { hookEventName: "tool_call", content }),
-					)
-				: [],
+		message: { case: messageCase, value } as ExecClientMessage["message"],
 	});
 
 	const clientMessage = create(AgentClientMessageSchema, {
@@ -2564,7 +2543,7 @@ function sendExecClientMessage<TCase extends NonNullable<ExecClientMessage["mess
 	const responseBytes = toBinary(AgentClientMessageSchema, clientMessage);
 	h2Request.write(frameConnectMessage(responseBytes));
 
-	log("execClientMessage", messageCase, wireValue);
+	log("execClientMessage", messageCase, value);
 }
 
 /**
@@ -2676,20 +2655,13 @@ export async function resolveExecHandler<TArgs, R>(
 			// two views consistent: every exec result is a proto oneof whose only
 			// non-failure variant is `success`, so a `rejected`/`error`/
 			// `file_not_found`/... result must not be recorded as a successful call.
-			const providerResult = finalToolResult
-				? carryCursorExecAdditionalContext(execResult, finalToolResult, buildFromToolResult)
-				: execResult;
 			return {
-				execResult: providerResult,
+				execResult,
 				toolResult: finalToolResult ?? (await pair(...describeExecResult(execResult))),
 			};
 		}
 		if (finalToolResult) {
-			const providerResult = buildFromToolResult(finalToolResult);
-			return {
-				execResult: carryCursorExecAdditionalContext(providerResult, finalToolResult, buildFromToolResult),
-				toolResult: finalToolResult,
-			};
+			return { execResult: buildFromToolResult(finalToolResult), toolResult: finalToolResult };
 		}
 		const reason = "Tool returned no result";
 		return { execResult: buildRejected(reason), toolResult: await pair(reason, true) };
@@ -2775,7 +2747,6 @@ function splitExecHandlerResult<R>(result: CursorExecHandlerResult<R>): {
 			return { execResult, toolResult };
 		}
 	}
-
 	return { execResult: result as R };
 }
 
@@ -2790,58 +2761,8 @@ async function applyToolResultHandler(
 	if (!toolResult || !onToolResult) {
 		return toolResult;
 	}
-	const updated = (await onToolResult(toolResult)) ?? toolResult;
-	const additionalContext = getToolResultAdditionalContext(toolResult);
-	if (additionalContext && getToolResultAdditionalContext(updated) === undefined) {
-		return cloneWithToolResultAdditionalContext(updated, additionalContext);
-	}
-	return updated;
-}
-
-function cloneWithToolResultAdditionalContext<TResult extends object>(
-	result: TResult,
-	additionalContext: readonly string[],
-): TResult {
-	const carrier: object = Array.isArray(result)
-		? Object.defineProperties([], Object.getOwnPropertyDescriptors(result))
-		: Object.create(Object.getPrototypeOf(result), Object.getOwnPropertyDescriptors(result));
-	setToolResultAdditionalContext(carrier, additionalContext);
-	// The clone has the source object's prototype and complete property descriptors.
-	return carrier as TResult;
-}
-
-/**
- * Carry passive context on the provider result without changing its typed
- * payload. Cursor exposes a dedicated envelope field when
- * `acceptHookAdditionalContexts` is set; older servers receive the prior
- * content-injection fallback instead.
- */
-function carryCursorExecAdditionalContext<TResult>(
-	execResult: TResult,
-	toolResult: ToolResultMessage,
-	buildFromToolResult: (toolResult: ToolResultMessage) => TResult,
-): TResult {
-	const additionalContext = getToolResultAdditionalContext(toolResult)?.filter(context => context.trim().length > 0);
-	if (!additionalContext || additionalContext.length === 0) return execResult;
-	if (!execResult || typeof execResult !== "object") {
-		return buildFromToolResult(toolResultForProvider(toolResult));
-	}
-
-	const carrier = cloneWithToolResultAdditionalContext(execResult, additionalContext);
-	Object.defineProperty(carrier, kCursorExecContextFallback, {
-		value: buildFromToolResult(toolResultForProvider(toolResult)),
-		configurable: true,
-	});
-	return carrier;
-}
-
-function toolResultForProvider(toolResult: ToolResultMessage): ToolResultMessage {
-	const additionalContext = getToolResultAdditionalContext(toolResult)?.filter(context => context.trim().length > 0);
-	if (!additionalContext || additionalContext.length === 0) return toolResult;
-	return {
-		...toolResult,
-		content: [...toolResult.content, { type: "text", text: additionalContext.join("\n\n") }],
-	};
+	const updated = await onToolResult(toolResult);
+	return updated ?? toolResult;
 }
 
 function toolResultToText(toolResult: ToolResultMessage): string {

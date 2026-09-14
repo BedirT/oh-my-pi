@@ -10,7 +10,6 @@ import {
 	type CursorExecHandlers,
 	type CursorToolResultHandler,
 	type Effort,
-	getToolResultAdditionalContext,
 	type ImageContent,
 	type Message,
 	type Model,
@@ -354,7 +353,6 @@ export interface AgentPromptOptions {
 /** Buffered Cursor exec-channel tool result waiting to be emitted after the assistant message. */
 interface CursorToolResultEntry {
 	toolResult: ToolResultMessage;
-	additionalContext: readonly string[];
 	/**
 	 * Set while an async `cursorOnToolResult` transformer is still running for
 	 * this entry, and cleared once it settles. The drain awaits it so a
@@ -1386,20 +1384,14 @@ export class Agent {
 			// that, a transformer resolving after the swap would patch a detached
 			// object while the persisted result kept the original payload — the
 			// rewrite silently lost.
-			const entry: CursorToolResultEntry = {
-				toolResult: message,
-				additionalContext: getToolResultAdditionalContext(message) ?? [],
-			};
+			const entry: CursorToolResultEntry = { toolResult: message };
 			this.#cursorToolResultBuffer.push(entry);
 			const transform = this.#cursorOnToolResult;
 			if (transform) {
 				const pending = (async () => {
 					try {
 						const updated = await transform(message);
-						if (updated) {
-							entry.toolResult = updated;
-							entry.additionalContext = getToolResultAdditionalContext(updated) ?? entry.additionalContext;
-						}
+						if (updated) entry.toolResult = updated;
 					} catch {}
 				})();
 				entry.pending = pending;
@@ -1650,11 +1642,7 @@ export class Agent {
 				.filter(entry => entry.pending !== undefined)
 				.map(entry => entry.pending);
 			if (pendingTransforms.length > 0) await Promise.all(pendingTransforms);
-			// Snapshot the entries alongside their results: the buffer is cleared
-			// below before the context message is built, and the entries carry
-			// the passive context the results alone do not.
-			const bufferedCursorEntries = this.#cursorToolResultBuffer;
-			const bufferedCursorResults = bufferedCursorEntries.map(({ toolResult }) => toolResult);
+			const bufferedCursorResults = this.#cursorToolResultBuffer.map(({ toolResult }) => toolResult);
 			const retainedToolCallIds = new Set(completedToolCallIds);
 			for (const { toolCallId } of bufferedCursorResults) retainedToolCallIds.add(toolCallId);
 			const errorMsg: AssistantMessage =
@@ -1731,18 +1719,9 @@ export class Agent {
 					this.#emit({ type: "message_end", message: toolResult });
 					toolResults.push(toolResult);
 				}
-				const contextMessage = this.#buildCursorAdditionalContextMessage(bufferedCursorEntries, errorMsg);
-				if (contextMessage) {
-					this.#emit({ type: "message_start", message: contextMessage });
-					this.appendMessage(contextMessage);
-					this.#emit({ type: "message_end", message: contextMessage });
-				}
 				this.#emit({ type: "turn_end", message: errorMsg, toolResults });
 				turnOpen = false;
-				this.#emit({
-					type: "agent_end",
-					messages: [errorMsg, ...toolResults, ...(contextMessage ? [contextMessage] : [])],
-				});
+				this.#emit({ type: "agent_end", messages: [errorMsg, ...toolResults] });
 			} else {
 				this.appendMessage(errorMsg);
 				this.#state.error = errorMessage;
@@ -1780,35 +1759,6 @@ export class Agent {
 		}
 	}
 
-	#buildCursorAdditionalContextMessage(
-		buffer: CursorToolResultEntry[],
-		assistantMessage: AssistantMessage,
-	): AgentMessage | undefined {
-		const callOrder = new Map<string, number>();
-		for (const block of assistantMessage.content) {
-			if (block.type === "toolCall" && !callOrder.has(block.id)) {
-				callOrder.set(block.id, callOrder.size);
-			}
-		}
-		const context = buffer
-			.map((entry, position) => ({
-				entry,
-				position,
-				order: callOrder.get(entry.toolResult.toolCallId) ?? Number.MAX_SAFE_INTEGER,
-			}))
-			.sort((left, right) => left.order - right.order || left.position - right.position)
-			.flatMap(({ entry }) => entry.additionalContext)
-			.filter(value => value.trim().length > 0)
-			.join("\n\n");
-		if (context.length === 0) return undefined;
-		return {
-			role: "developer",
-			content: [{ type: "text", text: context }],
-			attribution: "agent",
-			timestamp: Date.now(),
-		};
-	}
-
 	/**
 	 * Emit a Cursor assistant message with buffered exec-channel toolResults.
 	 *
@@ -1843,12 +1793,6 @@ export class Agent {
 				this.#emit({ type: "message_end", message: toolResult });
 			}
 
-			const contextMessage = this.#buildCursorAdditionalContextMessage(buffer, assistantMessage);
-			if (contextMessage) {
-				this.#emit({ type: "message_start", message: contextMessage });
-				this.appendMessage(contextMessage);
-				this.#emit({ type: "message_end", message: contextMessage });
-			}
 		} finally {
 			this.#cursorToolResultDrain = undefined;
 		}

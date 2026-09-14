@@ -1,13 +1,12 @@
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import {
-	type AgentEvent,
-	type AgentTool,
-	type AgentToolContext,
-	type AgentToolResult,
-	type AgentToolUpdateCallback,
-	withAdditionalContext,
+import type {
+	AgentEvent,
+	AgentTool,
+	AgentToolContext,
+	AgentToolResult,
+	AgentToolUpdateCallback,
 } from "@oh-my-pi/pi-agent-core";
 import type {
 	CursorMcpCall,
@@ -18,7 +17,6 @@ import type {
 	CursorExecHandlers as ICursorExecHandlers,
 	ToolResultMessage,
 } from "@oh-my-pi/pi-ai";
-import { setToolResultAdditionalContext } from "@oh-my-pi/pi-ai";
 import {
 	omitUndefinedArgs,
 	piEscapeRegexLiteral,
@@ -211,9 +209,8 @@ function createToolResultMessage(
 	toolName: string,
 	result: AgentToolResult<unknown>,
 	isError: boolean,
-	additionalContext: readonly string[] = [],
 ): ToolResultMessage {
-	const message: ToolResultMessage = {
+	return {
 		role: "toolResult",
 		toolCallId,
 		toolName,
@@ -222,8 +219,6 @@ function createToolResultMessage(
 		isError,
 		timestamp: Date.now(),
 	};
-	setToolResultAdditionalContext(message, additionalContext);
-	return message;
 }
 
 function buildToolErrorResult(message: string): AgentToolResult<unknown> {
@@ -231,21 +226,6 @@ function buildToolErrorResult(message: string): AgentToolResult<unknown> {
 		content: [{ type: "text", text: message }],
 		details: {},
 	};
-}
-
-function createToolContext(options: CursorExecBridgeOptions): {
-	context: AgentToolContext;
-	additionalContext: string[];
-} {
-	const additionalContext: string[] = [];
-	const addAdditionalContext = (context: string): void => {
-		additionalContext.push(context);
-	};
-	const baseToolContext = options.getToolContext?.();
-	// Augmentation preserves the host object's private brand: a structural
-	// clone would break `#private`-backed members (see `withAdditionalContext`).
-	const context = withAdditionalContext(baseToolContext, addAdditionalContext);
-	return { context, additionalContext };
 }
 
 async function executeTool(
@@ -269,7 +249,6 @@ async function executeTool(
 
 	let result: AgentToolResult<unknown>;
 	let isError = false;
-	const toolContext = createToolContext(options);
 
 	const onUpdate: AgentToolUpdateCallback<unknown> | undefined = options.emitEvent
 		? partialResult => {
@@ -293,7 +272,7 @@ async function executeTool(
 			toolArgs as Record<string, unknown>,
 			undefined,
 			onUpdate,
-			toolContext.context,
+			options.getToolContext?.(),
 		);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -308,7 +287,7 @@ async function executeTool(
 	};
 	options.emitEvent?.({ type: "tool_execution_end", toolCallId, toolName, result: sanitizedFinalResult, isError });
 
-	return createToolResultMessage(toolCallId, toolName, result, isError, toolContext.additionalContext);
+	return createToolResultMessage(toolCallId, toolName, result, isError);
 }
 
 function allowsDirectFileMutation(options: CursorExecBridgeOptions): boolean {
@@ -551,7 +530,6 @@ export class CursorExecHandlers implements ICursorExecHandlers {
 
 		let result: AgentToolResult<unknown>;
 		let isError = false;
-		const toolContext = createToolContext(this.options);
 
 		let rawText = "";
 		let sanitizedRawText = "";
@@ -593,7 +571,7 @@ export class CursorExecHandlers implements ICursorExecHandlers {
 		};
 
 		try {
-			result = await tool.execute(toolCallId, toolArgs, undefined, onUpdate, toolContext.context);
+			result = await tool.execute(toolCallId, toolArgs, undefined, onUpdate, this.options.getToolContext?.());
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			result = buildToolErrorResult(message);
@@ -627,7 +605,7 @@ export class CursorExecHandlers implements ICursorExecHandlers {
 			result: sanitizedFinalResult,
 			isError,
 		});
-		return createToolResultMessage(toolCallId, toolName, result, isError, toolContext.additionalContext);
+		return createToolResultMessage(toolCallId, toolName, result, isError);
 	}
 
 	async diagnostics(args: Parameters<NonNullable<ICursorExecHandlers["diagnostics"]>>[0]) {

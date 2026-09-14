@@ -31655,8 +31655,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 2048,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -31690,8 +31689,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -31725,8 +31723,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -31760,8 +31757,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -31795,8 +31791,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -31830,8 +31825,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -31875,7 +31869,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -31921,7 +31914,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -31967,7 +31959,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32013,7 +32004,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 512,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32059,7 +32049,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32104,7 +32093,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32149,7 +32137,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32195,7 +32182,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32241,7 +32227,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 512,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32286,7 +32271,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32331,7 +32315,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32377,7 +32360,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32409,8 +32391,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -32441,8 +32422,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -32483,7 +32463,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32526,7 +32505,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32568,7 +32546,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32603,8 +32580,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 2048,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -32638,8 +32614,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -32673,8 +32648,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -32708,8 +32682,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -32743,8 +32716,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -32778,8 +32750,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -32813,8 +32784,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -32859,7 +32829,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -32906,7 +32875,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32951,7 +32919,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -32996,7 +32963,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33041,7 +33007,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33086,7 +33051,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33131,7 +33095,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33177,7 +33140,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33223,7 +33185,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33269,7 +33230,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 512,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33314,7 +33274,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33359,7 +33318,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33404,7 +33362,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33450,7 +33407,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33493,7 +33449,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33539,7 +33494,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33586,7 +33540,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33631,7 +33584,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33676,7 +33628,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33721,7 +33672,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33767,7 +33717,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33813,7 +33762,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33859,7 +33807,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 512,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -33904,7 +33851,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33949,7 +33895,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -33994,7 +33939,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34040,7 +33984,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -34085,7 +34028,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34130,7 +34072,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34175,7 +34116,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34208,8 +34148,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34241,8 +34180,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34286,7 +34224,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34332,7 +34269,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -34378,7 +34314,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -34423,7 +34358,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34468,7 +34402,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34514,7 +34447,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -34546,8 +34478,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34578,8 +34509,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34610,8 +34540,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34653,7 +34582,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34696,7 +34624,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34739,7 +34666,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34771,8 +34697,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34814,7 +34739,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -34846,8 +34770,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34879,8 +34802,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34911,8 +34833,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34943,8 +34864,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -34976,8 +34896,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35009,8 +34928,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35041,8 +34959,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35073,8 +34990,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35118,7 +35034,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35161,7 +35076,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35194,8 +35108,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35236,7 +35149,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35270,8 +35182,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35312,7 +35223,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35354,7 +35264,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35396,7 +35305,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35438,7 +35346,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35480,7 +35387,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35511,8 +35417,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35542,8 +35447,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35574,8 +35478,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35616,7 +35519,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35649,8 +35551,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35682,8 +35583,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35725,7 +35625,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35758,8 +35657,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35792,8 +35690,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -35838,7 +35735,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -35885,7 +35781,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35930,7 +35825,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -35975,7 +35869,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36020,7 +35913,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36065,7 +35957,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36111,7 +36002,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36157,7 +36047,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36203,7 +36092,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 512,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36248,7 +36136,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36293,7 +36180,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36339,7 +36225,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36372,8 +36257,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -36404,8 +36288,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -36447,7 +36330,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36480,8 +36362,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -36515,8 +36396,7 @@
 				"promptCacheMode": "explicit",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
-				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 4
 			},
 			"supportsComputerUse": false
 		},
@@ -36561,7 +36441,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36608,7 +36487,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36653,7 +36531,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36698,7 +36575,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36743,7 +36619,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36788,7 +36663,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36833,7 +36707,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -36879,7 +36752,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36925,7 +36797,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -36971,7 +36842,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 512,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -37016,7 +36886,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37061,7 +36930,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37106,7 +36974,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 1024,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37152,7 +37019,6 @@
 				"supportsLongPromptCacheRetention": true,
 				"promptCacheMinimumTokens": 4096,
 				"promptCacheMaximumCheckpoints": 4,
-				"supportsMidConversationSystem": true,
 				"streamIdleTimeoutMs": 900000
 			},
 			"supportsComputerUse": false
@@ -37194,7 +37060,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37227,8 +37092,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37259,8 +37123,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37291,8 +37154,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37324,8 +37186,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37356,8 +37217,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37389,8 +37249,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37422,8 +37281,7 @@
 				"promptCacheMode": "none",
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
-				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false
+				"promptCacheMaximumCheckpoints": 0
 			},
 			"supportsComputerUse": false
 		},
@@ -37464,7 +37322,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37506,7 +37363,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37549,7 +37405,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37592,7 +37447,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37634,7 +37488,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37676,7 +37529,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false
@@ -37718,7 +37570,6 @@
 				"supportsLongPromptCacheRetention": false,
 				"promptCacheMinimumTokens": 0,
 				"promptCacheMaximumCheckpoints": 0,
-				"supportsMidConversationSystem": false,
 				"streamIdleTimeoutMs": 600000
 			},
 			"supportsComputerUse": false

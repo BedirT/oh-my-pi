@@ -185,25 +185,6 @@ describe("azure openai responses streaming", () => {
 		]);
 	});
 
-	it("preserves dynamic developer messages on Azure Responses", async () => {
-		const payload = await captureAzurePayload({
-			messages: [
-				{ role: "user", content: "Say hello", timestamp: Date.now() },
-				{
-					role: "developer",
-					content: [{ type: "text", text: "Prefer indexed retrieval." }],
-					attribution: "agent",
-					timestamp: Date.now(),
-				},
-			],
-		});
-
-		expect(payload.input).toEqual([
-			{ role: "user", content: [{ type: "input_text", text: "Say hello" }] },
-			{ role: "developer", content: [{ type: "input_text", text: "Prefer indexed retrieval." }] },
-		]);
-	});
-
 	it("omits reasoning summaries when model compatibility disables them", async () => {
 		const model: Model<"azure-openai-responses"> = buildModel({
 			...azureModel,

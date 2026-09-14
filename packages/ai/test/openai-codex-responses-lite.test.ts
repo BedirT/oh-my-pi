@@ -476,33 +476,6 @@ describe("openai-codex fresh execution input shaping", () => {
 			},
 		]);
 	});
-
-	it("keeps image-bearing dynamic developer messages on the user role", () => {
-		const model = createCodexModel("gpt-5.1-codex", { input: ["text", "image"] });
-		const input = convertCodexResponsesMessages(model, {
-			messages: [
-				{
-					role: "developer",
-					content: [
-						{ type: "text", text: "Match this reference." },
-						{ type: "image", data: "AAAA", mimeType: "image/png" },
-					],
-					attribution: "agent",
-					timestamp: Date.now(),
-				},
-			],
-		});
-
-		expect(input).toEqual([
-			{
-				role: "user",
-				content: [
-					{ type: "input_text", text: "Match this reference." },
-					{ type: "input_image", image_url: "data:image/png;base64,AAAA", detail: "auto" },
-				],
-			},
-		]);
-	});
 });
 
 describe("openai-codex Responses Lite and client metadata wire format", () => {

@@ -2061,18 +2061,13 @@ export function convertMessages(
 		}
 
 		const devAsUser = !compat.supportsDeveloperRole;
-		const inputRole =
-			msg.role === "developer" &&
-			!devAsUser &&
-			(typeof msg.content === "string" || msg.content.every(item => item.type === "text"))
-				? "developer"
-				: "user";
 		if (msg.role === "user" || msg.role === "developer") {
+			const role = !devAsUser && msg.role === "developer" ? "developer" : "user";
 			if (typeof msg.content === "string") {
 				const text = msg.content.toWellFormed();
 				if (text.trim().length === 0) continue;
 				params.push({
-					role: inputRole,
+					role: role,
 					content: text,
 				});
 			} else {
@@ -2107,14 +2102,10 @@ export function convertMessages(
 					} satisfies ChatCompletionContentPartText);
 				}
 				if (content.length === 0) continue;
-				if (
-					inputRole === "developer" &&
-					content.every((part): part is ChatCompletionContentPartText => part.type === "text")
-				) {
-					params.push({ role: "developer", content });
-				} else {
-					params.push({ role: "user", content });
-				}
+				params.push({
+					role: "user",
+					content,
+				});
 			}
 		} else if (msg.role === "assistant") {
 			const assistantMsg: OpenAICompletionsAssistantMessageParam = {
@@ -2440,7 +2431,12 @@ export function convertMessages(
 			continue;
 		}
 
-		lastRole = msg.role === "developer" ? inputRole : msg.role;
+		lastRole =
+			msg.role === "developer"
+				? model.reasoning && compat.supportsDeveloperRole
+					? "developer"
+					: "system"
+				: msg.role;
 	}
 
 	return params;

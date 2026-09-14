@@ -593,16 +593,10 @@ export interface AnthropicCompat {
 }
 
 /**
- * Compatibility settings for Bedrock Converse request shapes and stream
- * behavior. Cache pricing is deliberately not used to infer capabilities.
+ * Compatibility settings for Bedrock Converse prompt caching. Cache pricing is
+ * deliberately not used to infer these request-shape capabilities.
  */
 export interface BedrockCompat {
-	/**
-	 * Whether mid-conversation `role: "system"` messages are accepted in the
-	 * `messages` array on supported Claude families. When unset, auto-detected
-	 * from the model id.
-	 */
-	supportsMidConversationSystem?: boolean;
 	/** Whether this endpoint accepts no checkpoints, automatic caching, or explicit cachePoint blocks. */
 	promptCacheMode?: "none" | "automatic" | "explicit";
 	/** Whether explicit cachePoint blocks accept `ttl: "1h"`; omitted TTL means Bedrock's 5-minute default. */
@@ -626,13 +620,12 @@ export interface BedrockCompat {
 	streamIdleTimeoutMs?: number;
 }
 
-/** Fully-resolved Bedrock Converse capabilities, materialized once by `buildModel`. */
+/** Fully-resolved Bedrock Converse prompt-cache capabilities, materialized once by `buildModel`. */
 export interface ResolvedBedrockCompat {
 	promptCacheMode: NonNullable<BedrockCompat["promptCacheMode"]>;
 	supportsLongPromptCacheRetention: boolean;
 	promptCacheMinimumTokens: number;
 	promptCacheMaximumCheckpoints: number;
-	supportsMidConversationSystem: boolean;
 	/**
 	 * Stream-watchdog idle-timeout fallback in ms for hosts with no keepalive
 	 * events; 0 disables the idle watchdog. Undefined defers to

@@ -151,21 +151,6 @@ describe("hasCopilotVisionInput", () => {
 		expect(hasCopilotVisionInput(messages)).toBe(true);
 	});
 
-	it("returns true when a developer message has image content", () => {
-		const messages: Message[] = [
-			{
-				role: "developer",
-				content: [
-					{ type: "text", text: "use this reference" },
-					{ type: "image", data: "abc123", mimeType: "image/png" },
-				],
-				attribution: "agent",
-				timestamp: Date.now(),
-			},
-		];
-		expect(hasCopilotVisionInput(messages)).toBe(true);
-	});
-
 	it("returns true when a toolResult has image content", () => {
 		const messages: Message[] = [
 			{

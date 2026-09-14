@@ -40,12 +40,7 @@ function expectsAdaptiveDisplay(id: string): boolean {
 
 describe("Bedrock prompt-cache compat", () => {
 	test("resolves the AWS-documented capability for every cache-priced bundled Claude family", () => {
-		const cases: Array<{
-			id: string;
-			minimumTokens: number;
-			supportsLongRetention: boolean;
-			supportsMidConversationSystem?: boolean;
-		}> = [
+		const cases = [
 			{
 				id: "anthropic.claude-3-5-haiku-20241022-v1:0",
 				minimumTokens: 2048,
@@ -68,12 +63,7 @@ describe("Bedrock prompt-cache compat", () => {
 				minimumTokens: 1024,
 				supportsLongRetention: false,
 			},
-			{
-				id: "anthropic.claude-fable-5",
-				minimumTokens: 1024,
-				supportsLongRetention: true,
-				supportsMidConversationSystem: true,
-			},
+			{ id: "anthropic.claude-fable-5", minimumTokens: 1024, supportsLongRetention: true },
 			{
 				id: "anthropic.claude-haiku-4-5-20251001-v1:0",
 				minimumTokens: 4096,
@@ -96,12 +86,7 @@ describe("Bedrock prompt-cache compat", () => {
 			},
 			{ id: "anthropic.claude-opus-4-6-v1", minimumTokens: 4096, supportsLongRetention: false },
 			{ id: "global.anthropic.claude-opus-4-7", minimumTokens: 4096, supportsLongRetention: true },
-			{
-				id: "us.anthropic.claude-opus-4-8",
-				minimumTokens: 4096,
-				supportsLongRetention: true,
-				supportsMidConversationSystem: true,
-			},
+			{ id: "us.anthropic.claude-opus-4-8", minimumTokens: 4096, supportsLongRetention: true },
 			{
 				id: "anthropic.claude-sonnet-4-20250514-v1:0",
 				minimumTokens: 1024,
@@ -113,19 +98,13 @@ describe("Bedrock prompt-cache compat", () => {
 				supportsLongRetention: true,
 			},
 			{ id: "anthropic.claude-sonnet-4-6", minimumTokens: 1024, supportsLongRetention: false },
-			{
-				id: "us.anthropic.claude-sonnet-5",
-				minimumTokens: 4096,
-				supportsLongRetention: true,
-				supportsMidConversationSystem: true,
-			},
-		];
+			{ id: "us.anthropic.claude-sonnet-5", minimumTokens: 4096, supportsLongRetention: true },
+		] as const;
 
-		for (const { id, minimumTokens, supportsLongRetention, supportsMidConversationSystem = false } of cases) {
+		for (const { id, minimumTokens, supportsLongRetention } of cases) {
 			expect(buildModel(bedrockSpec({ id })).compat).toEqual({
 				promptCacheMode: minimumTokens === 0 ? "none" : "explicit",
 				supportsLongPromptCacheRetention: supportsLongRetention,
-				supportsMidConversationSystem,
 				promptCacheMinimumTokens: minimumTokens,
 				promptCacheMaximumCheckpoints: minimumTokens === 0 ? 0 : 4,
 				// bedrockSpec is reasoning:true → keepalive-free idle floor applies
@@ -139,7 +118,6 @@ describe("Bedrock prompt-cache compat", () => {
 		const expected = {
 			promptCacheMode: "explicit",
 			supportsLongPromptCacheRetention: false,
-			supportsMidConversationSystem: false,
 			promptCacheMinimumTokens: 1024,
 			promptCacheMaximumCheckpoints: 4,
 		} as const;
