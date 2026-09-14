@@ -2979,6 +2979,9 @@ async function executeToolCalls(
 			// `recordSkippedTool` and `emitToolResult` once per record, so any
 			// work we did here would double-count.
 			record.skipped = true;
+			// The call never ran: drop its prepared context so it cannot leak
+			// into the next provider request.
+			record.additionalContext = [];
 			return;
 		}
 		// Park before starting this tool while the process-wide pause gate is
@@ -3004,6 +3007,7 @@ async function executeToolCalls(
 		const effectiveArgs = record.args;
 		if (record.signal.aborted) {
 			record.skipped = true;
+			record.additionalContext = [];
 			recordSkippedTool(telemetry, {
 				toolCallId: toolCall.id,
 				toolName: toolCall.name,
@@ -3179,6 +3183,7 @@ async function executeToolCalls(
 			// execution may already have performed partial work before throwing on
 			// abort, so preserve that distinction in the placeholder metadata.
 			record.skipped = true;
+			record.additionalContext = [];
 			emitToolResult(record, createSkippedToolResult(interruptState.source, executionStarted), true);
 		} else {
 			// No interrupt on this signal, or the tool finished before the interrupt landed
@@ -3315,6 +3320,7 @@ async function executeToolCalls(
 	for (const record of records) {
 		if (!record.toolResultMessage) {
 			record.skipped = true;
+			record.additionalContext = [];
 			recordSkippedTool(telemetry, {
 				toolCallId: record.toolCall.id,
 				toolName: record.toolCall.name,
@@ -3326,6 +3332,7 @@ async function executeToolCalls(
 	await speculationCoordinator?.discardAll("candidate was not dispatched");
 
 	const additionalContext = records
+		.filter(record => !record.skipped)
 		.flatMap(record => record.additionalContext)
 		.filter(context => context.trim().length > 0)
 		.join("\n\n");

@@ -4907,6 +4907,76 @@ describe("agentLoopContinue with AgentMessage", () => {
 		expect(secondRequest?.messages.some(message => message.role === "developer")).toBe(false);
 	});
 
+	it("does not inject beforeToolCall context from steering-skipped calls", async () => {
+		const toolSchema = type({ value: "string" });
+		const executed: string[] = [];
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			concurrency: "exclusive",
+			interruptible: true,
+			async execute(_toolCallId, params) {
+				executed.push(params.value);
+				return {
+					content: [{ type: "text", text: `ok:${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+		const context: AgentContext = { systemPrompt: [""], messages: [], tools: [tool] };
+		const queuedUserMessage = createUserMessage("interrupt");
+		let queuedDelivered = false;
+		let secondRequest: Context | undefined;
+		const mock = createMockModel({
+			responses: [
+				{
+					content: [
+						{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "first" } },
+						{ type: "toolCall", id: "tool-2", name: "echo", arguments: { value: "second" } },
+					],
+				},
+				request => {
+					secondRequest = request;
+					return { content: ["done"] };
+				},
+			],
+		});
+		const config: AgentLoopConfig = {
+			model: mock.model,
+			convertToLlm: messages =>
+				messages.filter(
+					message =>
+						message.role === "user" ||
+						message.role === "developer" ||
+						message.role === "assistant" ||
+						message.role === "toolResult",
+				) as Message[],
+			interruptMode: "immediate",
+			hasSteeringMessages: () => executed.length >= 1 && !queuedDelivered,
+			getSteeringMessages: async () => {
+				if (executed.length >= 1 && !queuedDelivered) {
+					queuedDelivered = true;
+					return [queuedUserMessage];
+				}
+				return [];
+			},
+			beforeToolCall: async ({ args }) => ({
+				additionalContext: `guidance for ${args.value}`,
+			}),
+		};
+
+		await agentLoop([createUserMessage("start")], context, config, undefined, mock.stream).result();
+
+		// The second call is skipped before execution: its prepared context is
+		// dropped while the executed call's context is still delivered.
+		expect(executed).toEqual(["first"]);
+		const developers = (secondRequest?.messages ?? []).filter(message => message.role === "developer");
+		expect(developers).toHaveLength(1);
+		expect(developers[0]?.content).toEqual([{ type: "text", text: "guidance for first" }]);
+	});
+
 	it("resolves functional concurrency from beforeToolCall-revised args", async () => {
 		const toolSchema = type({ value: "string" });
 		const concurrencySeen: unknown[] = [];
