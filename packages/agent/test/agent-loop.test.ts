@@ -4739,6 +4739,60 @@ describe("agentLoopContinue with AgentMessage", () => {
 		expect(developer?.content).toEqual([{ type: "text", text: "context from branded tool context" }]);
 	});
 
+	it("forwards tool writes on writable host data properties to the original context", async () => {
+		const toolSchema = type({ value: "string" });
+		interface CounterContext extends AgentToolContext {
+			counter: number;
+		}
+		const baseToolContext = { counter: 0 } as CounterContext;
+		const tool: AgentTool<typeof toolSchema, { value: string }> = {
+			name: "echo",
+			label: "Echo",
+			description: "Echo tool",
+			parameters: toolSchema,
+			async execute(_toolCallId, params, _signal, _onUpdate, toolContext) {
+				const ctx = toolContext as CounterContext;
+				ctx.counter += 1;
+				ctx.addAdditionalContext?.("context after write");
+				return {
+					content: [{ type: "text", text: `echoed: ${params.value}` }],
+					details: { value: params.value },
+				};
+			},
+		};
+		const context: AgentContext = { systemPrompt: [""], messages: [], tools: [tool] };
+		const mock = createMockModel({
+			responses: [
+				{ content: [{ type: "toolCall", id: "tool-1", name: "echo", arguments: { value: "hello" } }] },
+				{ content: ["done"] },
+			],
+		});
+		const config: AgentLoopConfig = {
+			model: mock.model,
+			convertToLlm: messages =>
+				messages.filter(
+					message =>
+						message.role === "user" ||
+						message.role === "developer" ||
+						message.role === "assistant" ||
+						message.role === "toolResult",
+				) as Message[],
+			getToolContext: () => baseToolContext,
+		};
+
+		const stream = agentLoop([createUserMessage("echo something")], context, config, undefined, mock.stream);
+		for await (const _ of stream) {
+			// drain
+		}
+
+		// Tools previously received the host object itself: a descriptor copy
+		// would fork `counter` onto the clone and hide the write here.
+		expect(baseToolContext.counter).toBe(1);
+		expect(baseToolContext).not.toHaveProperty("addAdditionalContext");
+		const developer = mock.calls[1]?.context.messages.find(message => message.role === "developer");
+		expect(developer?.content).toEqual([{ type: "text", text: "context after write" }]);
+	});
+
 	it("delivers additionalContext when replaying an unpaired tool tail", async () => {
 		const toolSchema = type({ value: "string" });
 		const tool: AgentTool<typeof toolSchema, { value: string }> = {

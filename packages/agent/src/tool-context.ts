@@ -7,10 +7,14 @@ import type { AgentToolContext } from "./types";
  * A structural clone must preserve more than shape: hosts may back context
  * members with ES `#private` state, which lives on the instance rather than
  * its prototype, so a naive descriptor copy throws `TypeError` the moment the
- * tool touches such a member. Data members copy by descriptor; functions bind
- * to the original receiver (including methods inherited through the prototype
- * chain) and accessors are re-homed onto it, keeping the private brand intact.
- * The injected callback is the only member that resolves against the clone.
+ * tool touches such a member. Functions bind to the original receiver
+ * (including methods inherited through the prototype chain) and accessors are
+ * re-homed onto it, keeping the private brand intact. Writable data members
+ * forward through accessors: tools previously received the host object itself,
+ * so a write such as `context.counter++` must stay visible through it — a
+ * descriptor copy would fork storage on the clone. Read-only data still
+ * copies by descriptor. The injected callback is the only member that
+ * resolves against the clone.
  * A host-supplied `addAdditionalContext` is always shadowed: the loop-owned
  * callback routes to the current call. Blank and non-string input never
  * reaches the callback.
@@ -39,6 +43,16 @@ export function withAdditionalContext(
 			});
 		} else if (typeof descriptor.value === "function") {
 			Object.defineProperty(clone, key, { ...descriptor, value: descriptor.value.bind(base) });
+		} else if (descriptor.writable === true) {
+			const host = base as unknown as Record<string | symbol, unknown>;
+			Object.defineProperty(clone, key, {
+				enumerable: descriptor.enumerable,
+				configurable: descriptor.configurable,
+				get: () => host[key],
+				set: (value: unknown) => {
+					host[key] = value;
+				},
+			});
 		} else {
 			Object.defineProperty(clone, key, descriptor);
 		}
