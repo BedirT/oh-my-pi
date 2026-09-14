@@ -4,6 +4,9 @@
 ### Added
 
 - Added trusted `additionalContext` instructions to `tool_call` extension and hook results, with ordered delivery after tool results across built-in, extension, nested `xd://`, and Cursor-native execution paths ([#8363](https://github.com/can1357/oh-my-pi/pull/8363) by [@kyle-elliott](https://github.com/kyle-elliott)).
+
+## [18.1.21] - 2026-09-14
+
 ### Fixed
 
 - Fixed Flatpak Chromium launcher executables (including `com.google.Chrome`, `org.chromium.Chromium`, and `io.github.ungoogled_software.ungoogled_chromium`) so `app.path` is treated as a browser and gets managed Chromium profile handling
