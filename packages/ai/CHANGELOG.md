@@ -2,10 +2,6 @@
 
 ## [Unreleased]
 
-### Added
-
-- Added a non-serializing side channel for provider-native tool results to carry trusted extension-authored instructions into the next provider request without changing persisted result payloads ([#8363](https://github.com/can1357/oh-my-pi/pull/8363) by [@kyle-elliott](https://github.com/kyle-elliott)).
-
 ## [18.1.20] - 2026-09-13
 
 ### Fixed

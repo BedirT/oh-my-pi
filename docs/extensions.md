@@ -395,8 +395,7 @@ later handler, its collected context is discarded.
 
 Registered tools can add context during execution through
 `ctx.addAdditionalContext?.("...")`. The same ordering and delivery rules apply, including tools
-reached through nested `xd://` dispatch and provider-native Cursor execution. This context is not
-serialized into the tool-result payload.
+reached through nested `xd://` dispatch.
 
 ### Delegating to a native built-in (`ctx.invokeTool`)
 

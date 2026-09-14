@@ -1,12 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { type } from "@oh-my-pi/omptype";
 import { Agent, AgentBusyError, type AgentEvent, type AgentTool, ThinkingLevel } from "@oh-my-pi/pi-agent-core";
-import {
-	type Context,
-	type SimpleStreamOptions,
-	setToolResultAdditionalContext,
-	type ToolResultMessage,
-} from "@oh-my-pi/pi-ai";
+import type { Context, SimpleStreamOptions, ToolResultMessage } from "@oh-my-pi/pi-ai";
 import { createMockModel } from "@oh-my-pi/pi-ai/providers/mock";
 import { kCursorExecResolved } from "@oh-my-pi/pi-ai/utils/block-symbols";
 import { AssistantMessageEventStream } from "@oh-my-pi/pi-ai/utils/event-stream";
@@ -839,49 +834,6 @@ describe("Agent", () => {
 		});
 	});
 
-	it("emits buffered Cursor context when the stream fails after buffering", async () => {
-		const mock = createMockModel({ responses: [] });
-		const errorText = "connection reset after Cursor exec";
-		const toolCall = {
-			type: "toolCall" as const,
-			id: "cursor-tool-ctx",
-			name: "shell",
-			arguments: { command: "pwd" },
-			[kCursorExecResolved]: true,
-		};
-		const started = createAssistantMessage([toolCall]);
-		const realToolResult: ToolResultMessage = {
-			role: "toolResult",
-			toolCallId: toolCall.id,
-			toolName: toolCall.name,
-			content: [{ type: "text", text: "/workspace" }],
-			isError: false,
-			timestamp: Date.now(),
-		};
-		setToolResultAdditionalContext(realToolResult, ["use this output before retrying"]);
-		const agent = new Agent({
-			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [], messages: [] },
-			cursorOnToolResult: message => message,
-			streamFn: (_model, _context, options) => {
-				const stream = new AssistantMessageEventStream();
-				queueMicrotask(async () => {
-					await options?.cursorOnToolResult?.(realToolResult);
-					stream.push({ type: "start", partial: started });
-					stream.fail(new Error(errorText));
-				});
-				return stream;
-			},
-		});
-
-		await agent.prompt("trigger");
-
-		const developers = agent.state.messages.filter(message => message.role === "developer");
-		expect(developers).toHaveLength(1);
-		expect(developers[0]).toMatchObject({
-			content: [{ type: "text", text: "use this output before retrying" }],
-		});
-	});
-
 	it("persists the transformed payload when the stream fails mid-transform", async () => {
 		// The error drain snapshots the Cursor buffer just like the normal one, so
 		// it needs the same await: a transformer still in flight when the provider
@@ -982,107 +934,6 @@ describe("Agent", () => {
 		const toolResults = agent.state.messages.filter(message => message.role === "toolResult");
 		expect(toolResults).toHaveLength(1);
 		expect(toolResults[0]).toMatchObject({ toolCallId: toolCall.id, toolName: toolCall.name });
-	});
-
-	it("emits Cursor side-transport context after results in assistant call order", async () => {
-		const mock = createMockModel({ responses: [] });
-		const firstCall = {
-			type: "toolCall" as const,
-			id: "cursor-context-first",
-			name: "read",
-			arguments: { path: "first" },
-			[kCursorExecResolved]: true,
-		};
-		const secondCall = {
-			type: "toolCall" as const,
-			id: "cursor-context-second",
-			name: "read",
-			arguments: { path: "second" },
-			[kCursorExecResolved]: true,
-		};
-		const started = createAssistantMessage([firstCall, secondCall]);
-		const firstResult: ToolResultMessage = {
-			role: "toolResult",
-			toolCallId: firstCall.id,
-			toolName: firstCall.name,
-			content: [{ type: "text", text: "first result" }],
-			isError: false,
-			timestamp: Date.now(),
-		};
-		const secondResult: ToolResultMessage = {
-			role: "toolResult",
-			toolCallId: secondCall.id,
-			toolName: secondCall.name,
-			content: [{ type: "text", text: "second result" }],
-			isError: false,
-			timestamp: Date.now(),
-		};
-		setToolResultAdditionalContext(firstResult, ["first context"]);
-		setToolResultAdditionalContext(secondResult, ["second context"]);
-		const agent = new Agent({
-			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [], messages: [] },
-			streamFn: (_model, _context, options) => {
-				const stream = new AssistantMessageEventStream();
-				queueMicrotask(async () => {
-					// Results may settle out of order; context follows the assistant blocks.
-					await options?.cursorOnToolResult?.(secondResult);
-					await options?.cursorOnToolResult?.(firstResult);
-					stream.push({ type: "start", partial: started });
-					stream.push({ type: "done", reason: "stop", message: started });
-				});
-				return stream;
-			},
-		});
-
-		await agent.prompt("trigger");
-
-		const messages = agent.state.messages;
-		const developer = messages.find(message => message.role === "developer");
-		expect(developer?.content).toEqual([{ type: "text", text: "first context\n\nsecond context" }]);
-		expect(messages.at(-1)).toBe(developer);
-		expect(messages.slice(-3, -1).every(message => message.role === "toolResult")).toBe(true);
-	});
-
-	it("uses passive context returned by a Cursor result transformer", async () => {
-		const mock = createMockModel({ responses: [] });
-		const toolCall = {
-			type: "toolCall" as const,
-			id: "cursor-transformed-context",
-			name: "read",
-			arguments: { path: "context" },
-			[kCursorExecResolved]: true,
-		};
-		const started = createAssistantMessage([toolCall]);
-		const original: ToolResultMessage = {
-			role: "toolResult",
-			toolCallId: toolCall.id,
-			toolName: toolCall.name,
-			content: [{ type: "text", text: "original result" }],
-			isError: false,
-			timestamp: Date.now(),
-		};
-		const agent = new Agent({
-			initialState: { model: mock.model, systemPrompt: ["Test"], tools: [], messages: [] },
-			cursorOnToolResult: message => {
-				const transformed = { ...message };
-				setToolResultAdditionalContext(transformed, ["transformed context"]);
-				return transformed;
-			},
-			streamFn: (_model, _context, options) => {
-				const stream = new AssistantMessageEventStream();
-				queueMicrotask(async () => {
-					await options?.cursorOnToolResult?.(original);
-					stream.push({ type: "start", partial: started });
-					stream.push({ type: "done", reason: "stop", message: started });
-				});
-				return stream;
-			},
-		});
-
-		await agent.prompt("trigger");
-
-		const developer = agent.state.messages.find(message => message.role === "developer");
-		expect(developer?.content).toEqual([{ type: "text", text: "transformed context" }]);
 	});
 
 	it("sends passive tool context with the default LLM conversion", async () => {
