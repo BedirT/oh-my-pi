@@ -8,8 +8,6 @@
 
 use std::path::Path;
 
-use async_trait::async_trait;
-
 #[cfg(not(windows))]
 use crate::IsoError;
 use crate::{BackendKind, IsoResult, IsolationBackend, ProbeResult};
@@ -20,7 +18,6 @@ pub fn backend() -> &'static dyn IsolationBackend {
 	&WindowsBlockCloneBackend
 }
 
-#[async_trait]
 impl IsolationBackend for WindowsBlockCloneBackend {
 	fn kind(&self) -> BackendKind {
 		BackendKind::WindowsBlockClone

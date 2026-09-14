@@ -9,8 +9,6 @@
 
 use std::path::Path;
 
-use async_trait::async_trait;
-
 #[cfg(not(target_os = "macos"))]
 use crate::IsoError;
 use crate::{BackendKind, IsoResult, IsolationBackend, ProbeResult};
@@ -21,7 +19,6 @@ pub fn backend() -> &'static dyn IsolationBackend {
 	&ApfsBackend
 }
 
-#[async_trait]
 impl IsolationBackend for ApfsBackend {
 	fn kind(&self) -> BackendKind {
 		BackendKind::Apfs

@@ -7,8 +7,6 @@
 
 use std::path::Path;
 
-use async_trait::async_trait;
-
 #[cfg(not(windows))]
 use crate::IsoError;
 use crate::{BackendKind, IsoResult, IsolationBackend, ProbeResult};
@@ -19,7 +17,6 @@ pub fn backend() -> &'static dyn IsolationBackend {
 	&ProjfsBackend
 }
 
-#[async_trait]
 impl IsolationBackend for ProjfsBackend {
 	fn kind(&self) -> BackendKind {
 		BackendKind::Projfs

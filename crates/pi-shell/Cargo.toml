@@ -28,7 +28,6 @@ tokio-util.workspace = true
 toml.workspace = true
 xxhash-rust.workspace = true
 flume.workspace = true
-jiff = { version = "0.2", features = ["tzdb-bundle-platform"] }
 
 [target.'cfg(unix)'.dependencies]
 libc.workspace = true
@@ -39,4 +38,5 @@ windows-sys.workspace = true
 winreg.workspace = true
 
 [dev-dependencies]
+jiff = { version = "0.2", features = ["tzdb-bundle-platform"] }
 tempfile = "3"

@@ -2,17 +2,10 @@
 //!
 //! Mirrors [`pi_iso::IsolationBackend`] across the FFI boundary:
 //!
-//! - `iso_backend()` — kind enum of the platform-native backend.
 //! - `iso_resolve(preferred?)` — let the PAL pick the best backend (or honour a
 //!   hint) and report any fallback to the caller.
-//! - `iso_probe(kind?)` — backend availability, with an optional explicit kind
-//!   override; falls back to the native backend when omitted.
 //! - `iso_start(kind?, lower, merged)` / `iso_stop(kind?, merged)` — sync
 //!   syscalls wrapped in `spawn_blocking` so the JS side gets a normal Promise.
-//! - `iso_diff(lower, merged)` — backend-agnostic diff capture; emits one
-//!   [`IsoFileChange`] per file. `diff` is `Some(unified)` for text files and
-//!   `None` for binary files — callers copy the bytes from `merged` directly if
-//!   they need them.
 //!
 //! `IsoError::Unavailable` is serialised with the `ISO_UNAVAILABLE:`
 //! prefix so TS callers can distinguish "this backend isn't installed"
@@ -20,7 +13,7 @@
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use pi_iso::{BackendKind, ChangeKind, Diff, FileChange, IsoError, IsolationBackend};
+use pi_iso::{BackendKind, IsoError, IsolationBackend};
 
 use crate::js;
 
@@ -42,26 +35,6 @@ pub enum IsoBackendKind {
 	Rcopy             = 7,
 }
 
-/// How a single file changed between `lower` and `merged`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[napi]
-pub enum IsoChangeKind {
-	Added    = 0,
-	Modified = 1,
-	Removed  = 2,
-}
-
-/// Probe result for a specific isolation backend.
-#[napi(object)]
-pub struct IsoProbeResult {
-	/// True when the backend's prerequisites are satisfied.
-	pub available: bool,
-	/// Human-readable explanation when `available` is false.
-	pub reason:    Option<String>,
-	/// Resolved backend kind.
-	pub kind:      IsoBackendKind,
-}
-
 /// Outcome of [`iso_resolve`].
 #[napi(object)]
 pub struct IsoResolveResult {
@@ -74,42 +47,6 @@ pub struct IsoResolveResult {
 	pub fell_back:  bool,
 	/// Human-readable reason for the fallback, if any.
 	pub reason:     Option<String>,
-}
-
-/// One entry in an [`IsoDiff`].
-#[napi(object)]
-pub struct IsoFileChange {
-	/// Path relative to `merged`.
-	pub path: String,
-	pub op:   IsoChangeKind,
-	/// Unified-diff text. `None` (`null` in JS) means the file is binary;
-	/// read it directly from `merged` if you need the bytes.
-	pub diff: Option<String>,
-}
-
-#[napi(object)]
-pub struct IsoDiff {
-	pub files: Vec<IsoFileChange>,
-}
-
-/// Kind enum of the backend selected by default for this build target.
-#[napi]
-pub const fn iso_backend() -> IsoBackendKind {
-	to_napi_kind(BackendKind::native())
-}
-
-/// Probe whether the requested backend can start on this host. Pass
-/// `null`/omit `kind` to probe the platform-native backend.
-#[napi]
-pub fn iso_probe(kind: Option<IsoBackendKind>) -> IsoProbeResult {
-	let resolved = kind.map_or_else(BackendKind::native, from_napi_kind);
-	let backend = pi_iso::backend(resolved);
-	let probe = backend.probe();
-	IsoProbeResult {
-		available: probe.available,
-		reason:    probe.reason,
-		kind:      to_napi_kind(resolved),
-	}
 }
 
 /// Pick the best backend available right now. `preferred` is treated as
@@ -153,26 +90,6 @@ pub async fn iso_stop(kind: Option<IsoBackendKind>, merged: String) -> Result<()
 		.map_err(to_napi_error)
 }
 
-/// Capture the changes between `lower` and `merged`.
-///
-/// Uses [`pi_iso::IsolationBackend::diff`]'s default implementation —
-/// `git diff` when `merged/.git` exists, otherwise a mtime-skipped tree
-/// walk. The backend selection only affects the lifecycle methods; diff
-/// behaviour is uniform.
-#[napi]
-pub async fn iso_diff(lower: String, merged: String) -> Result<IsoDiff> {
-	let lower_path = std::path::PathBuf::from(lower);
-	let merged_path = std::path::PathBuf::from(merged);
-	// Every backend inherits the same default `diff()` body, so we pick
-	// Rcopy as the always-available host.
-	let backend = pi_iso::backend(BackendKind::Rcopy);
-	let diff = backend
-		.diff(&lower_path, &merged_path)
-		.await
-		.map_err(to_napi_error)?;
-	Ok(into_iso_diff(diff))
-}
-
 /// True if `message` is an error message produced by [`IsoError::Unavailable`].
 /// Use this to distinguish "this backend isn't installed" from a hard
 /// failure when handling caught errors on the JS side.
@@ -209,32 +126,10 @@ pub(crate) const fn from_napi_kind(kind: IsoBackendKind) -> BackendKind {
 	}
 }
 
-const fn to_napi_change_kind(kind: ChangeKind) -> IsoChangeKind {
-	match kind {
-		ChangeKind::Added => IsoChangeKind::Added,
-		ChangeKind::Modified => IsoChangeKind::Modified,
-		ChangeKind::Removed => IsoChangeKind::Removed,
-	}
-}
-
 fn to_napi_error(err: IsoError) -> Error {
 	match err {
 		IsoError::Unavailable(msg) => Error::from_reason(format!("{ISO_UNAVAILABLE_PREFIX} {msg}")),
 		IsoError::Other(msg) => Error::from_reason(msg),
-	}
-}
-
-fn into_iso_diff(diff: Diff) -> IsoDiff {
-	IsoDiff {
-		files: diff
-			.files
-			.into_iter()
-			.map(|f| IsoFileChange {
-				path: f.path.to_string_lossy().into_owned(),
-				op:   to_napi_change_kind(f.op),
-				diff: f.diff,
-			})
-			.collect(),
 	}
 }
 
@@ -243,5 +138,4 @@ fn _assert_backend_object_safe() {
 	fn assert_object_safe(_: &dyn IsolationBackend) {}
 	let backend = pi_iso::default_backend();
 	assert_object_safe(backend);
-	let _: FileChange;
 }

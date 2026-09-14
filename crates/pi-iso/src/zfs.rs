@@ -7,8 +7,6 @@
 
 use std::path::Path;
 
-use async_trait::async_trait;
-
 #[cfg(not(unix))]
 use crate::IsoError;
 use crate::{BackendKind, IsoResult, IsolationBackend, ProbeResult};
@@ -19,7 +17,6 @@ pub fn backend() -> &'static dyn IsolationBackend {
 	&ZfsBackend
 }
 
-#[async_trait]
 impl IsolationBackend for ZfsBackend {
 	fn kind(&self) -> BackendKind {
 		BackendKind::Zfs

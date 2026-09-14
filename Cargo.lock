@@ -6316,10 +6316,8 @@ dependencies = [
 name = "pi-iso"
 version = "18.1.21"
 dependencies = [
- "async-trait",
  "libc",
  "parking_lot",
- "similar 3.2.0",
  "tokio",
  "windows-sys 0.61.2",
 ]
@@ -6335,7 +6333,6 @@ dependencies = [
  "async-trait",
  "atspi",
  "base64 0.22.1",
- "clap",
  "clipboard-win",
  "core-graphics",
  "enigo",
@@ -6393,7 +6390,6 @@ dependencies = [
  "tinyvec",
  "tokio",
  "tokio-util",
- "toml",
  "uiautomation",
  "windows-sys 0.61.2",
  "winreg 0.56.0",
