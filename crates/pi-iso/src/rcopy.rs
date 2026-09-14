@@ -13,10 +13,13 @@
 
 use std::path::{Path, PathBuf};
 
+use async_trait::async_trait;
+
 use crate::{BackendKind, IsoError, IsoResult, IsolationBackend, ProbeResult, command_failed};
 
 pub struct RcopyBackend;
 
+#[async_trait]
 impl IsolationBackend for RcopyBackend {
 	fn kind(&self) -> BackendKind {
 		BackendKind::Rcopy

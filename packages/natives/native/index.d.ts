@@ -1853,6 +1853,9 @@ export interface InlineSloppyRegion {
  */
 export declare function invalidateFsScanCache(path?: string | undefined | null): void
 
+/** Kind enum of the backend selected by default for this build target. */
+export declare function isoBackend(): IsoBackendKind
+
 /**
  * Isolation backend identifier. Numeric so the JS side can `switch` on
  * the enum without string comparisons.
@@ -1868,12 +1871,61 @@ export declare enum IsoBackendKind {
   Rcopy = 7
 }
 
+/** How a single file changed between `lower` and `merged`. */
+export declare enum IsoChangeKind {
+  Added = 0,
+  Modified = 1,
+  Removed = 2
+}
+
+/**
+ * Capture the changes between `lower` and `merged`.
+ *
+ * Uses [`pi_iso::IsolationBackend::diff`]'s default implementation —
+ * `git diff` when `merged/.git` exists, otherwise a mtime-skipped tree
+ * walk. The backend selection only affects the lifecycle methods; diff
+ * behaviour is uniform.
+ */
+export declare function isoDiff(lower: string, merged: string): Promise<IsoDiff>
+
+export interface IsoDiff {
+  files: Array<IsoFileChange>
+}
+
+/** One entry in an [`IsoDiff`]. */
+export interface IsoFileChange {
+  /** Path relative to `merged`. */
+  path: string
+  op: IsoChangeKind
+  /**
+   * Unified-diff text. `None` (`null` in JS) means the file is binary;
+   * read it directly from `merged` if you need the bytes.
+   */
+  diff?: string
+}
+
 /**
  * True if `message` is an error message produced by [`IsoError::Unavailable`].
  * Use this to distinguish "this backend isn't installed" from a hard
  * failure when handling caught errors on the JS side.
  */
 export declare function isoIsUnavailableError(message: string): boolean
+
+/**
+ * Probe whether the requested backend can start on this host. Pass
+ * `null`/omit `kind` to probe the platform-native backend.
+ */
+export declare function isoProbe(kind?: IsoBackendKind | undefined | null): IsoProbeResult
+
+/** Probe result for a specific isolation backend. */
+export interface IsoProbeResult {
+  /** True when the backend's prerequisites are satisfied. */
+  available: boolean
+  /** Human-readable explanation when `available` is false. */
+  reason?: string
+  /** Resolved backend kind. */
+  kind: IsoBackendKind
+}
 
 /**
  * Pick the best backend available right now. `preferred` is treated as
@@ -2145,6 +2197,26 @@ export declare function mmrRerankIndices(contents: Array<string>, scores: Float6
 export interface NativeOAuthCallbackOptions {
   /** Custom URL scheme to register. */
   scheme: string
+}
+
+/**
+ * Named-node chain containing `options.line`, innermost-first, excluding the
+ * whole-file root.
+ *
+ * Single-line nodes beginning on the line (attributes, decorators) come
+ * first, followed by every enclosing construct. ERROR/MISSING recovery nodes
+ * are skipped. Returns `null` when the language is unrecognized, the line is
+ * out of range / blank, or the source fails to parse entirely.
+ */
+export declare function nodeChainAt(options: BlockRangeOptions): Array<NodeSpan> | null
+
+export interface NodeSpan {
+  /** 1-indexed inclusive first line of the node. */
+  startLine: number
+  /** 1-indexed inclusive last content line of the node. */
+  endLine: number
+  /** Tree-sitter grammar node kind (e.g. `attribute_item`, `function_item`). */
+  kind: string
 }
 
 /** Decode notebook JSON into the editable cell-marker text. */

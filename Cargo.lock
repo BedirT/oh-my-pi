@@ -6316,8 +6316,10 @@ dependencies = [
 name = "pi-iso"
 version = "18.1.21"
 dependencies = [
+ "async-trait",
  "libc",
  "parking_lot",
+ "similar 3.2.0",
  "tokio",
  "windows-sys 0.61.2",
 ]

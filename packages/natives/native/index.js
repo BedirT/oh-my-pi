@@ -78,7 +78,10 @@ export const hasMatch = nativeBindings.hasMatch;
 export const highlightCode = nativeBindings.highlightCode;
 export const htmlToMarkdown = nativeBindings.htmlToMarkdown;
 export const invalidateFsScanCache = nativeBindings.invalidateFsScanCache;
+export const isoBackend = nativeBindings.isoBackend;
+export const isoDiff = nativeBindings.isoDiff;
 export const isoIsUnavailableError = nativeBindings.isoIsUnavailableError;
+export const isoProbe = nativeBindings.isoProbe;
 export const isoResolve = nativeBindings.isoResolve;
 export const isoStart = nativeBindings.isoStart;
 export const isoStop = nativeBindings.isoStop;
@@ -92,6 +95,7 @@ export const matchesKey = nativeBindings.matchesKey;
 export const matchesKittySequence = nativeBindings.matchesKittySequence;
 export const matchesLegacySequence = nativeBindings.matchesLegacySequence;
 export const mmrRerankIndices = nativeBindings.mmrRerankIndices;
+export const nodeChainAt = nativeBindings.nodeChainAt;
 export const notebookToEditableText = nativeBindings.notebookToEditableText;
 export const parseKey = nativeBindings.parseKey;
 export const parseKittySequence = nativeBindings.parseKittySequence;
@@ -170,6 +174,11 @@ export const IsoBackendKind = {
 	WindowsBlockClone: 5,
 	Projfs: 6,
 	Rcopy: 7,
+};
+export const IsoChangeKind = {
+	Added: 0,
+	Modified: 1,
+	Removed: 2,
 };
 export const KeyEventType = {
 	Press: 1,

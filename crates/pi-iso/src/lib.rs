@@ -11,6 +11,14 @@
 //! - **Windows** projects an existing tree through `ProjFS`.
 //! - **`Rcopy`** is the cross-platform fallback: `git worktree` if `lower` is a
 //!   git repo, plain recursive copy otherwise.
+//!
+//! Every backend also knows how to surface the changes the workload made.
+//! When `merged` is a git repository — true for every git-backed task in
+//! omp regardless of which lifecycle backend was used —
+//! [`IsolationBackend::diff`] delegates to `git diff` so the output is
+//! byte-identical to what `git apply` consumes downstream. For non-git trees
+//! (only reachable via `Rcopy`) it walks both trees, using `(size, mtime)` as a
+//! cheap short-circuit before doing a content diff.
 
 #![cfg_attr(
 	not(any(target_os = "macos", target_os = "linux", windows)),
@@ -19,14 +27,19 @@
 
 use std::{fmt, path::Path};
 
+use async_trait::async_trait;
+
 mod apfs;
 mod btrfs;
+mod diff;
 mod linux_reflink;
 mod overlayfs;
 mod projfs;
 mod rcopy;
 mod windows_block_clone;
 mod zfs;
+
+pub use diff::{ChangeKind, Diff, FileChange};
 
 /// Stable identifier for which backend a build was compiled with.
 ///
@@ -226,6 +239,10 @@ pub(crate) fn command_failed(
 /// `start` / `stop` are synchronous because the platform primitives they
 /// wrap (`mount`, `clonefile`, `PrjStartVirtualizing`) are blocking
 /// syscalls that callers are expected to drive from `spawn_blocking`.
+/// [`diff`](Self::diff) is async because it does heavy I/O — walking
+/// trees, reading files, spawning git — and benefits from the runtime
+/// interleaving requests with other work.
+#[async_trait]
 pub trait IsolationBackend: Send + Sync {
 	fn kind(&self) -> BackendKind;
 
@@ -245,6 +262,19 @@ pub trait IsolationBackend: Send + Sync {
 	}
 
 	fn stop(&self, merged: &Path) -> IsoResult<()>;
+
+	/// Capture the changes between `lower` and the current state of
+	/// `merged`. The default implementation delegates to `git diff` when
+	/// `merged` is a git working tree, otherwise walks both trees using
+	/// `(size, mtime)` to skip equal files before falling back to a
+	/// content comparison.
+	///
+	/// Backends are free to override when they know a cheaper path —
+	/// overlayfs can scan the upper dir, `ProjFS` can query the placeholder
+	/// set — but the default is correct everywhere.
+	async fn diff(&self, lower: &Path, merged: &Path) -> IsoResult<Diff> {
+		diff::default_diff(lower, merged).await
+	}
 }
 
 /// Returns the backend selected for the current build target.
@@ -276,6 +306,11 @@ pub fn backend(kind: BackendKind) -> &'static dyn IsolationBackend {
 		BackendKind::Projfs => projfs::backend(),
 		BackendKind::Rcopy => &rcopy::RcopyBackend,
 	}
+}
+
+/// Convenience accessor for [`default_backend`]'s [`BackendKind`].
+pub fn backend_kind() -> BackendKind {
+	default_backend().kind()
 }
 
 /// Backend preference order for automatic isolation on this build target.

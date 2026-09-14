@@ -16,6 +16,8 @@
 
 use std::path::Path;
 
+use async_trait::async_trait;
+
 #[cfg(not(target_os = "linux"))]
 use crate::IsoError;
 use crate::{BackendKind, IsoResult, IsolationBackend, ProbeResult};
@@ -26,6 +28,7 @@ pub fn backend() -> &'static dyn IsolationBackend {
 	&OverlayfsBackend
 }
 
+#[async_trait]
 impl IsolationBackend for OverlayfsBackend {
 	fn kind(&self) -> BackendKind {
 		BackendKind::Overlayfs
