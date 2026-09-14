@@ -109,9 +109,9 @@ Options:
 
 This API is used for directory-based config lookups (commands, hooks, tools, agents, etc.).
 
-## `findConfigFile(subpath, options)` / `findConfigFileWithMeta(...)`
+## `findConfigFile(subpath, options)`
 
-Searches for the first existing file across ordered bases, returns first match (path-only or path+metadata).
+Searches for the first existing file across ordered bases, returns the first match's path.
 
 ## `findAllNearestProjectConfigDirs(subpath, cwd)`
 
