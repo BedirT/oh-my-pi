@@ -47,13 +47,19 @@ beforeEach(() => {
 		linkedWorktree: () => null,
 	} as unknown as VcsGitRepo;
 	vi.spyOn(vcs, "git").mockReturnValue(gitRepository);
-	vi.spyOn(vcs, "repo").mockReturnValue({
+	const fakeRepo = {
 		kind: () => "git",
 		asGit: () => gitRepository,
 		asJj: () => null,
 		root: () => fakeRepoInfo.repoRoot,
 		watchTarget: () => fakeRepoInfo.headPath,
-	} as unknown as VcsRepo);
+	} as unknown as VcsRepo;
+	vi.spyOn(vcs, "repo").mockReturnValue(fakeRepo);
+	// Same dual-detector stubbing as the PR-lookup timeout test: an unstubbed
+	// `vcs.repoForDisplay` hits real native discovery where supported and the
+	// real branch cached in the shared slot short-circuits `#lookupPr` before
+	// the `github.run` spy is reached.
+	vi.spyOn(vcs, "repoForDisplay").mockReturnValue(fakeRepo);
 });
 
 afterEach(() => {

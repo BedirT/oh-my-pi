@@ -84,12 +84,29 @@ sleep 30
 			const cleanupProcesses: Process[] = [];
 
 			try {
+				// Readiness handshake: the pidfile (existence + parseable pid) proves the
+				// launcher ran. Booting the subreaper spawns a second Bun runtime plus
+				// libc ffi, so the deadline must tolerate a loaded CI runner; an early
+				// subreaper exit fails fast instead of burning the full deadline. Real
+				// subprocess startup: fake timers cannot advance the child clock.
 				const pidFileHandle = Bun.file(pidFile);
-				const setupDeadline = Date.now() + 2_000;
-				while (!(await pidFileHandle.exists()) && Date.now() < setupDeadline) await Bun.sleep(10);
-				expect(await pidFileHandle.exists(), "the launcher must create its worker").toBe(true);
-
-				const workerPid = Number.parseInt((await pidFileHandle.text()).trim(), 10);
+				const setupDeadline = Date.now() + 15_000;
+				let pidText = "";
+				let workerPid = Number.NaN;
+				while (Date.now() < setupDeadline) {
+					if (child.exitCode !== null)
+						throw new Error(`subreaper exited during setup (exitCode=${child.exitCode}): ${child.peekStderr()}`);
+					try {
+						pidText = (await pidFileHandle.text()).trim();
+						workerPid = Number.parseInt(pidText, 10);
+						if (Number.isSafeInteger(workerPid) && workerPid > 0) break;
+					} catch {}
+					await Bun.sleep(25);
+				}
+				expect(
+					Number.isSafeInteger(workerPid) && workerPid > 0,
+					`the launcher must create its worker (last pidText=${JSON.stringify(pidText)})`,
+				).toBe(true);
 				const subreaper = Process.fromPid(child.pid);
 				const command = subreaper?.children()[0];
 				const worker = Process.fromPid(workerPid);

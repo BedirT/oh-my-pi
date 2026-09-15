@@ -102,13 +102,21 @@ beforeEach(() => {
 		linkedWorktree: () => null,
 	} as unknown as VcsGitRepo;
 	vi.spyOn(vcs, "git").mockReturnValue(gitRepository);
-	vi.spyOn(vcs, "repo").mockReturnValue({
+	const fakeRepo = {
 		kind: () => "git",
 		asGit: () => gitRepository,
 		asJj: () => null,
 		root: () => fakeRepoInfo.repoRoot,
 		watchTarget: () => fakeRepoInfo.headPath,
-	} as unknown as VcsRepo);
+	} as unknown as VcsRepo;
+	vi.spyOn(vcs, "repo").mockReturnValue(fakeRepo);
+	// The display detector (`vcs.repoForDisplay`) feeds the branch label while
+	// PR lookup deliberately uses the operational detector (`vcs.repo`); both
+	// must resolve to the fake checkout. An unstubbed display detector hits
+	// real native discovery wherever the binary supports it, caches the real
+	// branch in the shared branch slot, and the lookup early-returns before
+	// `github.run` is ever reached.
+	vi.spyOn(vcs, "repoForDisplay").mockReturnValue(fakeRepo);
 	// Bypass the delayed default-branch resolver used by `#isDefaultBranch`;
 	// synchronous seed of "main" is enough to make the check return false.
 });

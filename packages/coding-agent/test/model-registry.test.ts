@@ -2229,14 +2229,17 @@ describe("ModelRegistry", () => {
 			const testSettings = Settings.isolated();
 			const registry = new ModelRegistry(authStorage, modelsJsonPath, { settings: testSettings });
 			const legacy = registry.find("openai-codex", "gpt-5.5");
-			const spark = registry.find("openai-codex", "gpt-5.3-codex-spark");
-			if (!legacy || !spark) throw new Error("Expected bundled Codex models");
+			// gpt-5.3-codex-spark retired from the bundle; gpt-5.6-sol keeps a
+			// bundled window above its curated maximum, preserving the
+			// smaller-advertised-maximum-cannot-shrink branch.
+			const premium = registry.find("openai-codex", "gpt-5.6-sol");
+			if (!legacy || !premium) throw new Error("Expected bundled Codex models");
 			writeModelCache(
 				"openai-codex",
 				Date.now(),
 				[
 					{ ...legacy, maxContextWindow: 640_000 },
-					{ ...spark, maxContextWindow: 64_000 },
+					{ ...premium, maxContextWindow: 64_000 },
 				],
 				true,
 				"",
@@ -2247,7 +2250,7 @@ describe("ModelRegistry", () => {
 			await registry.reapplyModelPolicies();
 			expect(registry.find("openai-codex", "gpt-5.5")?.contextWindow).toBe(640_000);
 			// An advertised maximum smaller than the current window cannot shrink it.
-			expect(registry.find("openai-codex", "gpt-5.3-codex-spark")?.contextWindow).toBe(128_000);
+			expect(registry.find("openai-codex", "gpt-5.6-sol")?.contextWindow).toBe(1_000_000);
 
 			testSettings.set("extendedContext", false);
 			await registry.reapplyModelPolicies();

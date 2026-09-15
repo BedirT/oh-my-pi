@@ -56,6 +56,12 @@ type SharedFixture = {
 async function createSharedFixture(): Promise<SharedFixture> {
 	const baseDir = TempDir.createSync("@pi-goal-mode-shared-");
 	const authStorage = await AuthStorage.create(path.join(baseDir.path(), "testauth.db"));
+	// The identical-evidence test drives real goal continuations through
+	// promptCustomMessage, which runs the session's credential preflight. Seed
+	// the same in-memory runtime key sibling session tests use so no real
+	// credential (env var, login db) is required; the stubbed streamFn below
+	// means no network traffic ever leaves the harness.
+	authStorage.setRuntimeApiKey("anthropic", "test-key");
 	const modelRegistry = new ModelRegistry(authStorage);
 	const model = modelRegistry.find("anthropic", "claude-sonnet-4-5");
 	if (!model) {

@@ -116,7 +116,9 @@ describe("ClinePass catalog", () => {
 		const reference = createReferenceResolver<"openai-completions">(new Map())("kimi-k3");
 
 		expect(reference?.provider).toBe("fireworks");
-		expect(reference?.maxTokens).toBe(1_048_576);
+		// Upstream output ceiling, not the 1M context window (behavior.kdl
+		// moonshot limits; the ClinePass row keeps the degenerate 1M/1M pair).
+		expect(reference?.maxTokens).toBe(131_072);
 	});
 
 	it("applies the verified Cline gateway request and reasoning compatibility", () => {

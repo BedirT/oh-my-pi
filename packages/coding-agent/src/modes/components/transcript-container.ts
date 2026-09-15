@@ -144,8 +144,6 @@ export class TranscriptContainer extends Container {
 	#entries: TranscriptEntry[] = [];
 	#frontier = 0;
 	#nextBatchId = 1;
-	#childrenVersion = 0;
-	#syncedVersion = -1;
 	#offered: Offered | undefined;
 	#replayPending = false;
 	#replayRequested = false;
@@ -162,7 +160,6 @@ export class TranscriptContainer extends Container {
 	override addChild(component: Component): void {
 		if (isToolActivityComponent(component)) component.setToolActivityVisible(this.#toolActivityVisible);
 		super.addChild(component);
-		this.#childrenVersion++;
 		this.#entries.push({
 			component,
 			state: "active",
@@ -177,7 +174,6 @@ export class TranscriptContainer extends Container {
 	override removeChild(component: Component): void {
 		if (this.children.indexOf(component) < 0 || !this.canRemoveBlock(component)) return;
 		super.removeChild(component);
-		this.#childrenVersion++;
 		this.#entries = this.#entries.filter(candidate => candidate.component !== component);
 		this.#frontier = Math.min(this.#frontier, this.#entries.length);
 		this.#childStartRows.delete(component);
@@ -185,10 +181,8 @@ export class TranscriptContainer extends Container {
 
 	override clear(): void {
 		super.clear();
-		this.#childrenVersion++;
 		this.#entries = [];
 		this.#frontier = 0;
-		this.#syncedVersion = this.#childrenVersion;
 		this.#offered = undefined;
 		this.#childStartRows.clear();
 		this.#pinnedFrontier = undefined;
@@ -845,12 +839,15 @@ export class TranscriptContainer extends Container {
 	}
 
 	#syncEntries(): void {
-		if (this.#syncedVersion === this.#childrenVersion) return;
+		// `children` is a public mutable array: external owners reorder and
+		// replace it in place (`splice`, index assignment, wholesale `=`),
+		// bypassing addChild/removeChild. A version counter bumped only there
+		// cannot observe those edits, so entry identity against the live array
+		// is the only sound sync signal — it is rechecked on every access.
 		if (
 			this.#entries.length === this.children.length &&
 			this.#entries.every((entry, index) => entry.component === this.children[index])
 		) {
-			this.#syncedVersion = this.#childrenVersion;
 			return;
 		}
 		const existing = new Map(this.#entries.map(entry => [entry.component, entry]));
@@ -868,7 +865,6 @@ export class TranscriptContainer extends Container {
 		);
 		this.#frontier = this.#entries.findIndex(entry => entry.state !== "committed");
 		if (this.#frontier < 0) this.#frontier = this.#entries.length;
-		this.#syncedVersion = this.#childrenVersion;
 	}
 }
 
