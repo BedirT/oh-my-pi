@@ -426,7 +426,10 @@ function extractHeadHtml(html: string): string {
 	const tail = html.slice(headTagEnd + 1, headTagEnd + 1 + 128 * 1024);
 	const relativeEnd = tail.search(/<\/head\s*>/i);
 	if (relativeEnd === -1) {
-		return html.slice(headStart, Math.min(html.length, headTagEnd + 1 + 32 * 1024));
+		// No close tag inside the scanned window: the head may legitimately
+		// run longer, so return everything scanned rather than shrinking to
+		// the first 32 KiB and dropping valid alternate links.
+		return html.slice(headStart, headTagEnd + 1 + tail.length);
 	}
 	return html.slice(headStart, headTagEnd + 1 + relativeEnd + 7);
 }
